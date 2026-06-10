@@ -1,10 +1,10 @@
 import {
   type FormSchema,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidArrayPath,
 } from '@formisch/core/react';
 import type { ReactElement } from 'react';
-import type * as v from 'valibot';
 import { useFieldArray } from '../../hooks/index.ts';
 import type { FieldArrayStore, FormStore } from '../../types/index.ts';
 
@@ -22,7 +22,10 @@ export interface FieldArrayProps<
   /**
    * The path to the field array within the form schema.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The render function that receives the field array store and returns JSX.
    */

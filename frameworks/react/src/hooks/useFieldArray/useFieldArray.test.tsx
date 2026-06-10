@@ -19,6 +19,7 @@ describe('useFieldArray', () => {
       const { result } = renderHook(() => {
         const form = useForm({
           schema: v.object({ items: v.array(v.string()) }),
+          initialInput: { items: [] },
         });
         return useFieldArray(form, { path: ['items'] });
       });
@@ -30,6 +31,28 @@ describe('useFieldArray', () => {
       expect(fieldArray.isTouched).toBe(false);
       expect(fieldArray.isDirty).toBe(false);
       expect(fieldArray.isValid).toBe(true);
+    });
+
+    test('should upgrade field missing from initialInput to an empty array', () => {
+      const { result } = renderHook(() => {
+        const form = useForm({
+          schema: v.object({ items: v.optional(v.array(v.string())) }),
+          initialInput: {},
+        });
+        const fieldArray = useFieldArray(form, { path: ['items'] });
+        return { form, fieldArray };
+      });
+
+      expect(result.current.fieldArray.items).toEqual([]);
+
+      act(() => {
+        insert(result.current.form, {
+          path: ['items'],
+          initialInput: 'a',
+        });
+      });
+
+      expect(result.current.fieldArray.items).toHaveLength(1);
     });
 
     test('should reflect initialInput from form', () => {
@@ -150,6 +173,7 @@ describe('useFieldArray', () => {
       const { result, rerender } = renderHook(() => {
         const form = useForm({
           schema: v.object({ items: v.array(v.string()) }),
+          initialInput: { items: [] },
         });
         return useFieldArray(form, { path: ['items'] });
       });

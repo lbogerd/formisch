@@ -7,7 +7,7 @@ import { useFieldArray } from './useFieldArray.ts';
 describe('useFieldArray', () => {
   test('should return a FieldArrayStore typed against the form schema and path', () => {
     const schema = v.object({ tags: v.array(v.string()) });
-    const form = useForm({ schema });
+    const form = useForm({ schema, initialInput: { tags: [] } });
     const fieldArray = useFieldArray(form, { path: ['tags'] });
 
     expectTypeOf(fieldArray).toEqualTypeOf<
@@ -18,11 +18,13 @@ describe('useFieldArray', () => {
   test('should always type items as string[] regardless of element type', () => {
     const stringForm = useForm({
       schema: v.object({ tags: v.array(v.string()) }),
+      initialInput: { tags: [] },
     });
     const objectForm = useForm({
       schema: v.object({
         users: v.array(v.object({ name: v.string(), age: v.number() })),
       }),
+      initialInput: { users: [] },
     });
 
     expectTypeOf(
@@ -37,7 +39,10 @@ describe('useFieldArray', () => {
     const schema = v.object({
       user: v.object({ hobbies: v.array(v.string()) }),
     });
-    const form = useForm({ schema });
+    const form = useForm({
+      schema,
+      initialInput: { user: { hobbies: [] } },
+    });
     const fieldArray = useFieldArray(form, { path: ['user', 'hobbies'] });
 
     expectTypeOf(fieldArray.path).toEqualTypeOf<['user', 'hobbies']>();
@@ -48,7 +53,7 @@ describe('useFieldArray', () => {
       name: v.string(),
       tags: v.array(v.string()),
     });
-    const form = useForm({ schema });
+    const form = useForm({ schema, initialInput: { name: '', tags: [] } });
 
     // @ts-expect-error name is a string field, not an array
     useFieldArray(form, { path: ['name'] });
@@ -64,7 +69,10 @@ describe('useFieldArray', () => {
         v.object({ type: v.literal('b'), name: v.string() }),
       ]),
     });
-    const form = useForm({ schema });
+    const form = useForm({
+      schema,
+      initialInput: { data: { type: 'a', items: [] } },
+    });
     const fieldArray = useFieldArray(form, { path: ['data', 'items'] });
 
     expectTypeOf(fieldArray).toEqualTypeOf<

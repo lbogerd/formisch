@@ -8,11 +8,11 @@ import {
   type RequiredPath,
   setFieldBool,
   setFieldInput,
+  type StandardSchemaV1,
   validateIfRequired,
   type ValidPath,
 } from '@formisch/core/react';
 import { useEffect, useMemo } from 'react';
-import type * as v from 'valibot';
 import type { FieldStore, FormStore } from '../../types/index.ts';
 import { useSignals } from '../useSignals/index.ts';
 
@@ -26,7 +26,7 @@ export interface UseFieldConfig<
   /**
    * The path to the field within the form schema.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
 }
 
 /**

@@ -7,7 +7,6 @@ import {
   validateFormInput,
 } from '@formisch/core/react';
 import { useLayoutEffect, useMemo } from 'react';
-import * as v from 'valibot';
 import type { FormStore } from '../../types/index.ts';
 import { useSignals } from '../useSignals/index.ts';
 
@@ -28,10 +27,7 @@ export function useForm(config: FormConfig): FormStore {
   useSignals();
 
   const internalFormStore = useMemo(
-    () =>
-      createFormStore(config, (input) =>
-        v.safeParseAsync(config.schema, input)
-      ),
+    () => createFormStore(config),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );

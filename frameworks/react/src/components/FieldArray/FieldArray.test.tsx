@@ -13,7 +13,7 @@ type FormSchema = typeof schema;
 describe('FieldArray', () => {
   test('should render JSX returned from children', () => {
     function Test(): ReactElement {
-      const form = useForm({ schema });
+      const form = useForm({ schema, initialInput: { items: [] } });
       return (
         <FieldArray of={form} path={['items']}>
           {() => <span data-testid="content">hello</span>}

@@ -2,6 +2,13 @@
 
 All notable changes to the library will be documented in this file.
 
+## vX.X.X (Month DD, YYYY)
+
+- Change library to support any [Standard Schema](https://standardschema.dev) library (e.g. Zod, Valibot, ArkType) instead of Valibot only; `valibot` is no longer a peer dependency (**breaking**)
+- Change `initialInput` of `useForm` to be required, as the field structure of the form is derived from it (**breaking**)
+- Change `SubmitHandler` and `SubmitEventHandler` to receive the Standard Schema output type (**breaking**)
+- Change `useFieldArray` and `FieldArray` to lazily create and upgrade field stores for array paths missing from the initial input
+
 ## v0.5.0 (May 24, 2026)
 
 - Change `@formisch/core` to v0.7.0

@@ -17,13 +17,16 @@ describe('useField', () => {
   describe('initialization', () => {
     test('should return field store with default state and props', () => {
       const { result } = renderHook(() => {
-        const form = useForm({ schema: v.object({ name: v.string() }) });
+        const form = useForm({
+          schema: v.object({ name: v.string() }),
+          initialInput: { name: '' },
+        });
         return useField(form, { path: ['name'] });
       });
 
       const field = result.current;
       expect(field.path).toEqual(['name']);
-      expect(field.input).toBe(undefined);
+      expect(field.input).toBe('');
       expect(field.errors).toBe(null);
       expect(field.isTouched).toBe(false);
       expect(field.isDirty).toBe(false);
@@ -216,7 +219,10 @@ describe('useField', () => {
   describe('store stability', () => {
     test('should return memoized store reference across re-renders', () => {
       const { result, rerender } = renderHook(() => {
-        const form = useForm({ schema: v.object({ name: v.string() }) });
+        const form = useForm({
+          schema: v.object({ name: v.string() }),
+          initialInput: { name: '' },
+        });
         return useField(form, { path: ['name'] });
       });
 
@@ -262,7 +268,10 @@ describe('useField', () => {
 
     test('should unmount cleanly when the registered element is removed', () => {
       function Test(): ReactElement {
-        const form = useForm({ schema: v.object({ name: v.string() }) });
+        const form = useForm({
+          schema: v.object({ name: v.string() }),
+          initialInput: { name: '' },
+        });
         const field = useField(form, { path: ['name'] });
         return <input data-testid="input" {...field.props} />;
       }

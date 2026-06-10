@@ -7,7 +7,7 @@ import { useField } from './useField.ts';
 describe('useField', () => {
   test('should return a FieldStore typed against the form schema and path', () => {
     const schema = v.object({ name: v.string() });
-    const form = useForm({ schema });
+    const form = useForm({ schema, initialInput: { name: '' } });
     const field = useField(form, { path: ['name'] });
 
     expectTypeOf(field).toEqualTypeOf<FieldStore<typeof schema, ['name']>>();
@@ -15,7 +15,7 @@ describe('useField', () => {
 
   test('should narrow input type for primitive leaves', () => {
     const schema = v.object({ name: v.string(), age: v.number() });
-    const form = useForm({ schema });
+    const form = useForm({ schema, initialInput: { name: '', age: 0 } });
 
     expectTypeOf(useField(form, { path: ['name'] }).input).toEqualTypeOf<
       string | undefined
@@ -30,7 +30,10 @@ describe('useField', () => {
       user: v.object({ email: v.string() }),
       tags: v.array(v.string()),
     });
-    const form = useForm({ schema });
+    const form = useForm({
+      schema,
+      initialInput: { user: { email: '' }, tags: [] },
+    });
 
     expectTypeOf(
       useField(form, { path: ['user', 'email'] }).input
@@ -42,7 +45,7 @@ describe('useField', () => {
 
   test('should reject invalid paths', () => {
     const schema = v.object({ name: v.string() });
-    const form = useForm({ schema });
+    const form = useForm({ schema, initialInput: { name: '' } });
 
     // @ts-expect-error nonexistent field
     useField(form, { path: ['nonexistent'] });

@@ -15,7 +15,10 @@ describe('useForm', () => {
   describe('initialization', () => {
     test('should return form store with default state', () => {
       const { result } = renderHook(() =>
-        useForm({ schema: v.object({ name: v.string() }) })
+        useForm({
+          schema: v.object({ name: v.string() }),
+          initialInput: { name: '' },
+        })
       );
 
       const form = result.current;
@@ -95,7 +98,10 @@ describe('useForm', () => {
   describe('store stability', () => {
     test('should return memoized store reference across re-renders', () => {
       const { result, rerender } = renderHook(() =>
-        useForm({ schema: v.object({ name: v.string() }) })
+        useForm({
+          schema: v.object({ name: v.string() }),
+          initialInput: { name: '' },
+        })
       );
 
       const first = result.current;

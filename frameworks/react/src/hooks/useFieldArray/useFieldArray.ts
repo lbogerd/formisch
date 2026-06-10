@@ -5,10 +5,10 @@ import {
   INTERNAL,
   type InternalArrayStore,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidArrayPath,
 } from '@formisch/core/react';
 import { useMemo } from 'react';
-import type * as v from 'valibot';
 import type { FieldArrayStore, FormStore } from '../../types/index.ts';
 import { useSignals } from '../useSignals/index.ts';
 
@@ -22,7 +22,10 @@ export interface UseFieldArrayConfig<
   /**
    * The path to the array field within the form schema.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
 }
 
 /**
@@ -49,9 +52,13 @@ export function useFieldArray(
   useSignals();
 
   const internalFormStore = form[INTERNAL];
+  // Hint: The 'array' kind upgrades field stores of array fields that are
+  // missing from the initial input. This mutation is idempotent, so repeated
+  // renders (e.g. React strict mode) are safe.
   const internalFieldStore = getFieldStore(
     internalFormStore,
-    config.path
+    config.path,
+    'array'
   ) as InternalArrayStore;
 
   return useMemo(

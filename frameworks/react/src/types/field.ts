@@ -4,11 +4,11 @@ import type {
   PartialValues,
   PathValue,
   RequiredPath,
+  StandardSchemaV1,
   ValidArrayPath,
   ValidPath,
 } from '@formisch/core/react';
 import type { ChangeEventHandler, FocusEventHandler } from 'react';
-import type * as v from 'valibot';
 
 /**
  * Field element props interface.
@@ -50,11 +50,13 @@ export interface FieldStore<
   /**
    * The path to the field within the form.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
   /**
    * The current input value of the field.
    */
-  readonly input: PartialValues<PathValue<v.InferInput<TSchema>, TFieldPath>>;
+  readonly input: PartialValues<
+    PathValue<StandardSchemaV1.InferInput<TSchema>, TFieldPath>
+  >;
   /**
    * The current error messages of the field.
    */
@@ -75,7 +77,9 @@ export interface FieldStore<
    * Sets the field input value programmatically.
    */
   readonly onChange: (
-    value: PartialValues<PathValue<v.InferInput<TSchema>, TFieldPath>>
+    value: PartialValues<
+      PathValue<StandardSchemaV1.InferInput<TSchema>, TFieldPath>
+    >
   ) => void;
   /**
    * The props to spread onto the field element for integration.
@@ -93,7 +97,10 @@ export interface FieldArrayStore<
   /**
    * The path to the array field within the form.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The item IDs of the array field.
    */

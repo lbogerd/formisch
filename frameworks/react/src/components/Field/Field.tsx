@@ -1,10 +1,10 @@
 import {
   type FormSchema,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidPath,
 } from '@formisch/core/react';
 import type { ReactElement } from 'react';
-import type * as v from 'valibot';
 import { useField } from '../../hooks/index.ts';
 import type { FieldStore, FormStore } from '../../types/index.ts';
 
@@ -22,7 +22,7 @@ export interface FieldProps<
   /**
    * The path to the field within the form schema.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
   /**
    * The render function that receives the field store and returns JSX.
    */
