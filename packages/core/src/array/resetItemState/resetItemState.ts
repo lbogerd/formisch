@@ -1,5 +1,8 @@
+import { initializeFieldStore } from '../../field/initializeFieldStore/index.ts';
+import { reconcileFieldStore } from '../../field/reconcileFieldStore/index.ts';
 import { batch, createId } from '../../framework/index.ts';
-import type { InternalFieldStore } from '../../types/index.ts';
+import type { InternalFieldStore, PathKey } from '../../types/index.ts';
+import { isPlainObject } from '../../values.ts';
 
 /**
  * Resets the state of a field store (signal values) deeply nested. Sets
@@ -17,6 +20,15 @@ export function resetItemState(
 ): void {
   // Batch all state updates for optimal reactivity performance
   batch(() => {
+    // If value field receives a composite input, upgrade it first
+    if (internalFieldStore.kind === 'value') {
+      if (Array.isArray(initialInput)) {
+        reconcileFieldStore(internalFieldStore, 'array', false);
+      } else if (isPlainObject(initialInput)) {
+        reconcileFieldStore(internalFieldStore, 'object', false);
+      }
+    }
+
     // Clear elements array
     internalFieldStore.elements = [];
 
@@ -57,6 +69,9 @@ export function resetItemState(
           // Set current items
           internalFieldStore.items.value = newItems;
 
+          // Initialize path variable for lazy parsing
+          let path: PathKey[] | undefined;
+
           // Reset state for each array item
           for (
             let index = 0;
@@ -64,8 +79,31 @@ export function resetItemState(
             index < initialInput.length;
             index++
           ) {
-            // If child exists at this index, reset its state
-            if (internalFieldStore.children[index]) {
+            // If child is missing, initialize it from the input
+            if (!internalFieldStore.children[index]) {
+              // Parse path only when needed
+              path ??= JSON.parse(internalFieldStore.name) as PathKey[];
+
+              // Create empty child object
+              // @ts-expect-error
+              internalFieldStore.children[index] = {};
+
+              // Add current index to path
+              path.push(index);
+
+              // Initialize field store for new child
+              initializeFieldStore(
+                internalFieldStore.children[index],
+                // @ts-expect-error
+                initialInput[index],
+                path
+              );
+
+              // Remove index from path for next iteration
+              path.pop();
+
+              // Otherwise, reset its state
+            } else {
               // Recursively reset child with corresponding input
               resetItemState(
                 internalFieldStore.children[index],
@@ -86,6 +124,37 @@ export function resetItemState(
 
         // Otherwise, if field store is object, handle object-specific reset
       } else {
+        // If initial input contains unknown keys, initialize children for them
+        if (isPlainObject(initialInput)) {
+          // Initialize path variable for lazy parsing
+          let path: PathKey[] | undefined;
+
+          // Initialize child for each unknown initial input key
+          for (const key in initialInput) {
+            if (!internalFieldStore.children[key]) {
+              // Parse path only when needed
+              path ??= JSON.parse(internalFieldStore.name) as PathKey[];
+
+              // Create empty child object
+              // @ts-expect-error
+              internalFieldStore.children[key] = {};
+
+              // Add current key to path
+              path.push(key);
+
+              // Initialize field store for new child
+              initializeFieldStore(
+                internalFieldStore.children[key],
+                initialInput[key],
+                path
+              );
+
+              // Remove key from path for next iteration
+              path.pop();
+            }
+          }
+        }
+
         // Reset state for each object property
         for (const key in internalFieldStore.children) {
           // Recursively reset child with corresponding input

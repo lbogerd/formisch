@@ -1,20 +1,7 @@
 // @vitest-environment jsdom
-import * as v from 'valibot';
 import { beforeEach, describe, expect, test } from 'vitest';
-import type { InternalFieldStore } from '../../types/index.ts';
 import { createTestStore } from '../../vitest/index.ts';
 import { getElementInput } from './getElementInput.ts';
-
-function getChild(
-  store: ReturnType<typeof createTestStore>,
-  key: string
-): InternalFieldStore {
-  const child = store.children[key];
-  if (!child) {
-    throw new Error(`Child store "${key}" not found`);
-  }
-  return child;
-}
 
 function createInput(
   type: string,
@@ -35,13 +22,13 @@ describe('getElementInput', () => {
 
   describe('text inputs', () => {
     test('should return value for text input', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       const input = createInput('text', 'John');
       expect(getElementInput(input, store.children.name)).toBe('John');
     });
 
     test('should return value for email input', () => {
-      const store = createTestStore(v.object({ email: v.string() }));
+      const store = createTestStore({ initialInput: { email: undefined } });
       const input = createInput('email', 'test@example.com');
       expect(getElementInput(input, store.children.email)).toBe(
         'test@example.com'
@@ -49,7 +36,7 @@ describe('getElementInput', () => {
     });
 
     test('should return value for number input', () => {
-      const store = createTestStore(v.object({ age: v.string() }));
+      const store = createTestStore({ initialInput: { age: undefined } });
       const input = createInput('number', '25');
       expect(getElementInput(input, store.children.age)).toBe('25');
     });
@@ -57,7 +44,7 @@ describe('getElementInput', () => {
 
   describe('checkbox inputs', () => {
     test('should return checked state for single checkbox', () => {
-      const store = createTestStore(v.object({ agree: v.boolean() }));
+      const store = createTestStore({ initialInput: { agree: undefined } });
       const input = createInput('checkbox', 'yes', {
         name: 'agree',
         checked: true,
@@ -67,7 +54,7 @@ describe('getElementInput', () => {
     });
 
     test('should return array of checked values for checkbox group', () => {
-      const store = createTestStore(v.object({ colors: v.array(v.string()) }));
+      const store = createTestStore({ initialInput: { colors: [] } });
 
       const checkbox1 = createInput('checkbox', 'red', {
         name: 'colors',
@@ -94,7 +81,7 @@ describe('getElementInput', () => {
 
   describe('radio inputs', () => {
     test('should return value when radio is checked', () => {
-      const store = createTestStore(v.object({ gender: v.string() }));
+      const store = createTestStore({ initialInput: { gender: undefined } });
       const input = createInput('radio', 'male', {
         name: 'gender',
         checked: true,
@@ -103,9 +90,7 @@ describe('getElementInput', () => {
     });
 
     test('should return previous value when radio is not checked', () => {
-      const store = createTestStore(v.object({ gender: v.string() }), {
-        initialInput: { gender: 'female' },
-      });
+      const store = createTestStore({ initialInput: { gender: 'female' } });
       const input = createInput('radio', 'male', {
         name: 'gender',
         checked: false,
@@ -116,16 +101,14 @@ describe('getElementInput', () => {
 
   describe('select inputs', () => {
     test('should return value for single select', () => {
-      const store = createTestStore(v.object({ country: v.string() }));
+      const store = createTestStore({ initialInput: { country: undefined } });
       const select = document.createElement('select');
       select.innerHTML = '<option value="us" selected>US</option>';
       expect(getElementInput(select, store.children.country)).toBe('us');
     });
 
     test('should return array for multiple select', () => {
-      const store = createTestStore(
-        v.object({ countries: v.array(v.string()) })
-      );
+      const store = createTestStore({ initialInput: { countries: [] } });
       const select = document.createElement('select');
       select.multiple = true;
       select.innerHTML = `
@@ -133,30 +116,29 @@ describe('getElementInput', () => {
         <option value="uk">UK</option>
         <option value="de" selected>DE</option>
       `;
-      expect(
-        getElementInput(select, getChild(store, 'countries'))
-      ).toStrictEqual(['us', 'de']);
+      expect(getElementInput(select, store.children.countries)).toStrictEqual([
+        'us',
+        'de',
+      ]);
     });
 
     test('should exclude disabled options from multiple select', () => {
-      const store = createTestStore(
-        v.object({ countries: v.array(v.string()) })
-      );
+      const store = createTestStore({ initialInput: { countries: [] } });
       const select = document.createElement('select');
       select.multiple = true;
       select.innerHTML = `
         <option value="us" selected>US</option>
         <option value="uk" selected disabled>UK</option>
       `;
-      expect(
-        getElementInput(select, getChild(store, 'countries'))
-      ).toStrictEqual(['us']);
+      expect(getElementInput(select, store.children.countries)).toStrictEqual([
+        'us',
+      ]);
     });
   });
 
   describe('file inputs', () => {
     test('should return file for single file input', () => {
-      const store = createTestStore(v.object({ document: v.any() }));
+      const store = createTestStore({ initialInput: { document: undefined } });
       const input = createInput('file', '');
       const file = new File(['content'], 'test.txt');
       Object.defineProperty(input, 'files', { value: [file] });
@@ -164,7 +146,9 @@ describe('getElementInput', () => {
     });
 
     test('should return files array for multiple file input', () => {
-      const store = createTestStore(v.object({ documents: v.any() }));
+      const store = createTestStore({
+        initialInput: { documents: undefined },
+      });
       const input = createInput('file', '');
       input.multiple = true;
       const file1 = new File(['content1'], 'test1.txt');
@@ -179,7 +163,7 @@ describe('getElementInput', () => {
 
   describe('textarea', () => {
     test('should return value for textarea', () => {
-      const store = createTestStore(v.object({ bio: v.string() }));
+      const store = createTestStore({ initialInput: { bio: undefined } });
       const textarea = document.createElement('textarea');
       textarea.value = 'Hello world';
       expect(getElementInput(textarea, store.children.bio)).toBe('Hello world');

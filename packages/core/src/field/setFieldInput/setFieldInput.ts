@@ -5,7 +5,10 @@ import type {
   Path,
   PathKey,
 } from '../../types/index.ts';
+import { isPlainObject } from '../../values.ts';
+import { getFieldStore } from '../getFieldStore/index.ts';
 import { initializeFieldStore } from '../initializeFieldStore/index.ts';
+import { reconcileFieldStore } from '../reconcileFieldStore/index.ts';
 
 /**
  * Sets the input for a nested field store and all its children, updating
@@ -20,6 +23,15 @@ function setNestedInput(
 ): void {
   // Mark field as touched
   internalFieldStore.isTouched.value = true;
+
+  // If value field receives a composite input, upgrade it first
+  if (internalFieldStore.kind === 'value') {
+    if (Array.isArray(input)) {
+      reconcileFieldStore(internalFieldStore, 'array');
+    } else if (isPlainObject(input)) {
+      reconcileFieldStore(internalFieldStore, 'object');
+    }
+  }
 
   // If field store is array, handle array input
   if (internalFieldStore.kind === 'array') {
@@ -68,8 +80,6 @@ function setNestedInput(
           initializeFieldStore(
             internalFieldStore.children[index],
             // @ts-expect-error
-            internalFieldStore.schema.item,
-            // @ts-expect-error
             arrayInput[index],
             path
           );
@@ -113,6 +123,39 @@ function setNestedInput(
 
     // Otherwise, if field store is object, handle object input
   } else if (internalFieldStore.kind === 'object') {
+    // If input contains unknown keys, initialize children for them
+    if (isPlainObject(input)) {
+      // Initialize path variable for lazy parsing
+      let path: PathKey[] | undefined;
+
+      // Initialize child for each unknown input key
+      for (const key in input) {
+        if (!internalFieldStore.children[key]) {
+          // Parse path only when needed
+          path ??= JSON.parse(internalFieldStore.name) as PathKey[];
+
+          // Create empty child object
+          // @ts-expect-error
+          internalFieldStore.children[key] = {};
+
+          // Add current key to path
+          path.push(key);
+
+          // Initialize field store for new child
+          // Hint: The initial input is `undefined` because the key was not
+          // part of the initial input, so the field is marked as dirty.
+          initializeFieldStore(
+            internalFieldStore.children[key],
+            undefined,
+            path
+          );
+
+          // Remove key from path for next iteration
+          path.pop();
+        }
+      }
+    }
+
     // Set input for each object property
     for (const key in internalFieldStore.children) {
       // Recursively set nested input
@@ -165,23 +208,22 @@ export function setFieldInput(
   batch(() => {
     // Untrack to avoid creating reactive dependencies during update
     untrack(() => {
+      // Resolve target field store and lazily create missing stores
+      const targetFieldStore = getFieldStore(internalFormStore, path);
+
       // Start at form store root
       let internalFieldStore: InternalFieldStore = internalFormStore;
 
-      // Traverse path to target field
-      for (let index = 0; index < path.length; index++) {
+      // Traverse path and mark parent inputs as truthy
+      for (let index = 0; index < path.length - 1; index++) {
         // Navigate to child at current path key
         // @ts-expect-error
         internalFieldStore = internalFieldStore.children[path[index]];
-
-        // If not at target field, mark parent input as truthy
-        if (index < path.length - 1) {
-          internalFieldStore.input.value = true;
-        }
+        internalFieldStore.input.value = true;
       }
 
       // Set nested input on target field
-      setNestedInput(internalFieldStore, input);
+      setNestedInput(targetFieldStore, input);
     });
   });
 }

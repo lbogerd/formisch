@@ -1,9 +1,9 @@
-import type * as v from 'valibot';
 import type { INTERNAL } from '../../values.ts';
 import type { InternalObjectStore } from '../field/index.ts';
 import type { FormSchema } from '../schema/index.ts';
+import type { StandardSchemaV1 } from '../schema/standard.ts';
 import type { Signal } from '../signal/index.ts';
-import type { DeepPartial, MaybePromise } from '../utils/index.ts';
+import type { MaybePromise } from '../utils/index.ts';
 
 /**
  * Validation mode type.
@@ -26,8 +26,11 @@ export interface FormConfig<TSchema extends FormSchema = FormSchema> {
   readonly schema: TSchema;
   /**
    * The initial input of the form.
+   *
+   * Hint: The field structure of the form is derived from this value, so it
+   * is required and must be a plain object.
    */
-  readonly initialInput?: DeepPartial<v.InferInput<TSchema>> | undefined;
+  readonly initialInput: StandardSchemaV1.InferInput<TSchema>;
   /**
    * The validation mode of the form.
    */
@@ -61,9 +64,9 @@ export interface InternalFormStore<TSchema extends FormSchema = FormSchema>
    */
   revalidate: Exclude<ValidationMode, 'initial'>;
   /**
-   * The parse function of the form.
+   * The schema of the form.
    */
-  parse: (input: unknown) => Promise<v.SafeParseResult<TSchema>>;
+  schema: TSchema;
 
   /**
    * The submitting state of the form.
@@ -95,13 +98,13 @@ export interface BaseFormStore<TSchema extends FormSchema = FormSchema> {
  * Submit handler type.
  */
 export type SubmitHandler<TSchema extends FormSchema> = (
-  output: v.InferOutput<TSchema>
+  output: StandardSchemaV1.InferOutput<TSchema>
 ) => MaybePromise<unknown>;
 
 /**
  * Submit event handler type.
  */
 export type SubmitEventHandler<TSchema extends FormSchema> = (
-  output: v.InferOutput<TSchema>,
+  output: StandardSchemaV1.InferOutput<TSchema>,
   event: SubmitEvent
 ) => MaybePromise<unknown>;

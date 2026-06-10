@@ -4,6 +4,7 @@ export * from './getFieldBool/index.ts';
 export * from './getFieldInput/index.ts';
 export * from './getFieldStore/index.ts';
 export * from './initializeFieldStore/index.ts';
+export * from './reconcileFieldStore/index.ts';
 export * from './setFieldBool/index.ts';
 export * from './setFieldInput/index.ts';
 export * from './setInitialFieldInput/index.ts';

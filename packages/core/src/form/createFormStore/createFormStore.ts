@@ -1,42 +1,36 @@
-import type * as v from 'valibot';
-import { type FieldSchema, initializeFieldStore } from '../../field/index.ts';
+import { initializeFieldStore } from '../../field/index.ts';
 import { createSignal } from '../../framework/index.ts';
-import type {
-  FormConfig,
-  FormSchema,
-  InternalFormStore,
-} from '../../types/index.ts';
+import type { FormConfig, InternalFormStore } from '../../types/index.ts';
+import { isPlainObject } from '../../values.ts';
 
 /**
  * Creates a new internal form store from the provided configuration.
- * Initializes the field store hierarchy, sets validation modes, and
- * creates form state signals.
+ * Initializes the field store hierarchy based on the initial input, sets
+ * validation modes, and creates form state signals.
  *
  * @param config The form configuration.
- * @param parse The schema parse function.
  *
  * @returns The internal form store.
  */
-export function createFormStore(
-  config: FormConfig,
-  parse: (input: unknown) => Promise<v.SafeParseResult<FormSchema>>
-): InternalFormStore {
+export function createFormStore(config: FormConfig): InternalFormStore {
+  // If initial input is not a plain object, throw error
+  // Hint: The field structure of the form is derived from the initial input,
+  // so forms always require a plain object at the root.
+  if (!isPlainObject(config.initialInput)) {
+    throw new Error('The initial input of a form must be a plain object');
+  }
+
   // Create partial store object
   const store: Partial<InternalFormStore> = {};
 
-  // Initialize field store hierarchy from schema
-  initializeFieldStore(
-    store,
-    config.schema as FieldSchema,
-    config.initialInput,
-    []
-  );
+  // Initialize field store hierarchy from initial input
+  initializeFieldStore(store, config.initialInput, []);
 
   // Set form config and validation
   store.validators = 0;
   store.validate = config.validate ?? 'submit';
   store.revalidate = config.revalidate ?? 'input';
-  store.parse = parse;
+  store.schema = config.schema;
 
   // Initialize form state signals
   store.isSubmitting = createSignal(false);

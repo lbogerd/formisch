@@ -1,10 +1,9 @@
-import type { QRL } from '@qwik.dev/core';
-import type * as v from 'valibot';
+import type { NoSerialize } from '@qwik.dev/core';
 import type { INTERNAL } from '../../values.ts';
 import type { InternalObjectStore } from '../field/field.qwik.ts';
 import type { FormSchema } from '../schema/index.ts';
+import type { StandardSchemaV1 } from '../schema/standard.ts';
 import type { Signal } from '../signal/index.ts';
-import type { DeepPartial } from '../utils/index.ts';
 import type {
   SubmitEventHandler,
   SubmitHandler,
@@ -21,8 +20,11 @@ export interface FormConfig<TSchema extends FormSchema = FormSchema> {
   readonly schema: TSchema;
   /**
    * The initial input of the form.
+   *
+   * Hint: The field structure of the form is derived from this value, so it
+   * is required and must be a plain object.
    */
-  readonly initialInput?: DeepPartial<v.InferInput<TSchema>> | undefined;
+  readonly initialInput: StandardSchemaV1.InferInput<TSchema>;
   /**
    * The validation mode of the form.
    */
@@ -56,9 +58,9 @@ export interface InternalFormStore<TSchema extends FormSchema = FormSchema>
    */
   revalidate: Exclude<ValidationMode, 'initial'>;
   /**
-   * The parse function of the form.
+   * The schema of the form.
    */
-  parse: QRL<(input: unknown) => Promise<v.SafeParseResult<TSchema>>>;
+  schema: NoSerialize<TSchema>;
 
   /**
    * The submitting state of the form.

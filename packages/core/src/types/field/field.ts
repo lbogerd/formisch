@@ -1,4 +1,3 @@
-import type { Schema } from '../schema/index.ts';
 import type { Signal } from '../signal/index.ts';
 
 /**
@@ -21,10 +20,6 @@ export interface InternalBaseStore {
    * The name of the field.
    */
   name: string;
-  /**
-   * The schema of the field.
-   */
-  schema: Schema;
   /**
    * The initial elements of the field.
    */

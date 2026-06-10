@@ -1,5 +1,3 @@
-import type { NoSerialize } from '@qwik.dev/core';
-import type { Schema } from '../schema/index.ts';
 import type { Signal } from '../signal/index.ts';
 import type { FieldElement } from './field.ts';
 
@@ -15,10 +13,6 @@ export interface InternalBaseStore {
    * The name of the field.
    */
   name: string;
-  /**
-   * The schema of the field.
-   */
-  schema: NoSerialize<Schema>;
   /**
    * The elements of the field.
    */

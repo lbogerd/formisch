@@ -2,6 +2,19 @@
 
 All notable changes to the library will be documented in this file.
 
+## vX.X.X (Month DD, YYYY)
+
+- Change library to support any [Standard Schema](https://standardschema.dev) library (e.g. Zod, Valibot, ArkType) instead of Valibot only; `valibot` is no longer a peer dependency (**breaking**)
+- Add vendored `StandardSchemaV1` type and change `Schema` and `FormSchema` types to Standard Schema types (**breaking**)
+- Change `initialInput` of `FormConfig` to be required and typed as `StandardSchemaV1.InferInput<TSchema>`; the field structure of the form is now derived from the initial input instead of the schema (**breaking**)
+- Add `reconcileFieldStore` to upgrade lazily created value fields to array or object fields in place
+- Change `getFieldStore` to lazily create missing field stores and upgrade parent stores based on the path keys
+- Change `createFormStore` to take only the form configuration and to throw if `initialInput` is not a plain object; the parse function parameter has been removed (**breaking**)
+- Change `validateFormInput` to call `schema['~standard'].validate` directly and return a `StandardSchemaV1.Result`; issues with unresolvable paths (symbol keys or never-created fields) are assigned to the deepest reachable ancestor field (**breaking**)
+- Change `initializeFieldStore` to derive the field structure from the initial input value instead of the schema; schema defaults (`v.getDefault`) are no longer applied (**breaking**)
+- Change `setFieldInput`, `setInitialFieldInput`, `copyItemState`, `swapItemState` and `resetItemState` to lazily create and upgrade field stores when structures diverge
+- Remove `decodeFormData`, `FieldSchema` type, the `schema` property of `InternalFieldStore` and the `parse` property of `InternalFormStore` (**breaking**)
+
 ## v0.7.0 (May 24, 2026)
 
 - Add `FormSchema` type that constrains a form's root schema to object schemas (sync or async) and combinators (`intersect`, `union`, `variant`)

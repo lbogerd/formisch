@@ -1,13 +1,10 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../../vitest/index.ts';
 
 describe('initializeFieldStore', () => {
   describe('value fields', () => {
     test('should initialize with correct properties', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
-        initialInput: { name: 'John' },
-      });
+      const store = createTestStore({ initialInput: { name: 'John' } });
       const field = store.children.name;
       expect(field.kind).toBe('value');
       expect(field.name).toBe('["name"]');
@@ -17,17 +14,52 @@ describe('initializeFieldStore', () => {
       expect(field.errors.value).toBeNull();
       expect(field.isTouched.value).toBe(false);
       expect(field.isDirty.value).toBe(false);
+      expect(field.elements).toStrictEqual([]);
+      expect(field.initialElements).toBe(field.elements);
     });
 
     test('should initialize with undefined input', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
+      expect(store.children.name.kind).toBe('value');
       expect(store.children.name.input.value).toBeUndefined();
+    });
+
+    test('should initialize with null input', () => {
+      const store = createTestStore({ initialInput: { name: null } });
+      expect(store.children.name.kind).toBe('value');
+      expect(store.children.name.input.value).toBeNull();
+    });
+
+    test('should initialize with Date input', () => {
+      const date = new Date();
+      const store = createTestStore({ initialInput: { createdAt: date } });
+      expect(store.children.createdAt.kind).toBe('value');
+      expect(store.children.createdAt.input.value).toBe(date);
+    });
+
+    test('should initialize with File input', () => {
+      const file = new File(['content'], 'avatar.png');
+      const store = createTestStore({ initialInput: { avatar: file } });
+      expect(store.children.avatar.kind).toBe('value');
+      expect(store.children.avatar.input.value).toBe(file);
+    });
+
+    test('should initialize nullish sub-object as value field', () => {
+      const store = createTestStore({
+        initialInput: { user: null, profile: undefined },
+      });
+      expect(store.children.user.kind).toBe('value');
+      expect(store.children.user.input.value).toBeNull();
+      expect(store.children.profile.kind).toBe('value');
+      expect(store.children.profile.input.value).toBeUndefined();
     });
   });
 
   describe('object fields', () => {
-    test('should initialize with children', () => {
-      const store = createTestStore(v.object({ a: v.string(), b: v.number() }));
+    test('should initialize with children for each key', () => {
+      const store = createTestStore({
+        initialInput: { a: undefined, b: undefined },
+      });
       expect(store.kind).toBe('object');
       expect(store.name).toBe('[]');
       expect(store.children).toHaveProperty('a');
@@ -35,39 +67,64 @@ describe('initializeFieldStore', () => {
     });
 
     test('should initialize nested object', () => {
-      const store = createTestStore(
-        v.object({ user: v.object({ name: v.string() }) })
-      );
+      const store = createTestStore({
+        initialInput: { user: { name: 'John' } },
+      });
       const userStore = store.children.user;
       expect(userStore.kind).toBe('object');
       if (userStore.kind === 'object') {
+        expect(userStore.name).toBe('["user"]');
         expect(userStore.children.name.kind).toBe('value');
+        expect(userStore.children.name.name).toBe('["user","name"]');
+        expect(userStore.children.name.input.value).toBe('John');
+      }
+    });
+
+    test('should initialize empty object without children', () => {
+      const store = createTestStore({ initialInput: { user: {} } });
+      const userStore = store.children.user;
+      expect(userStore.kind).toBe('object');
+      if (userStore.kind === 'object') {
+        expect(userStore.children).toStrictEqual({});
       }
     });
 
     test('should set input to true for object fields', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
-      expect(store.input.value).toBe(true);
+      const store = createTestStore({ initialInput: { user: {} } });
+      const userStore = store.children.user;
+      expect(userStore.input.value).toBe(true);
+      expect(userStore.initialInput.value).toBe(true);
+      expect(userStore.startInput.value).toBe(true);
     });
   });
 
   describe('array fields', () => {
     test('should initialize with children for each item', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-        initialInput: { items: ['a', 'b', 'c'] },
-      });
+      const store = createTestStore({ initialInput: { items: ['a', 'b'] } });
       const itemsStore = store.children.items;
       expect(itemsStore.kind).toBe('array');
       if (itemsStore.kind === 'array') {
-        expect(itemsStore.children).toHaveLength(3);
-        expect(itemsStore.items.value).toHaveLength(3);
+        expect(itemsStore.children).toHaveLength(2);
+        expect(itemsStore.children[0].kind).toBe('value');
+        expect(itemsStore.children[0].name).toBe('["items",0]');
+        expect(itemsStore.children[0].input.value).toBe('a');
+        expect(itemsStore.children[1].input.value).toBe('b');
+      }
+    });
+
+    test('should initialize items with unique IDs for each child', () => {
+      const store = createTestStore({ initialInput: { items: ['a', 'b'] } });
+      const itemsStore = store.children.items;
+      expect(itemsStore.kind).toBe('array');
+      if (itemsStore.kind === 'array') {
+        expect(itemsStore.items.value).toStrictEqual(['id-0', 'id-1']);
+        expect(itemsStore.initialItems.value).toStrictEqual(['id-0', 'id-1']);
+        expect(itemsStore.startItems.value).toStrictEqual(['id-0', 'id-1']);
       }
     });
 
     test('should initialize empty array', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-        initialInput: { items: [] },
-      });
+      const store = createTestStore({ initialInput: { items: [] } });
       const itemsStore = store.children.items;
       expect(itemsStore.kind).toBe('array');
       if (itemsStore.kind === 'array') {
@@ -77,382 +134,69 @@ describe('initializeFieldStore', () => {
     });
 
     test('should set input to true for array fields', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-        initialInput: { items: ['a'] },
+      const store = createTestStore({ initialInput: { items: ['a'] } });
+      const itemsStore = store.children.items;
+      expect(itemsStore.input.value).toBe(true);
+      expect(itemsStore.initialInput.value).toBe(true);
+      expect(itemsStore.startInput.value).toBe(true);
+    });
+  });
+
+  describe('nested mixed structures', () => {
+    test('should initialize objects inside arrays', () => {
+      const store = createTestStore({
+        initialInput: { users: [{ name: 'John' }] },
       });
-      expect(store.children.items.input.value).toBe(true);
-    });
-  });
-
-  describe('wrapped schemas', () => {
-    test('should unwrap optional schema', () => {
-      const store = createTestStore(v.object({ name: v.optional(v.string()) }));
-      expect(store.children.name.kind).toBe('value');
-    });
-
-    test('should unwrap nullable schema', () => {
-      const store = createTestStore(v.object({ name: v.nullable(v.string()) }));
-      expect(store.children.name.kind).toBe('value');
-    });
-
-    test('should unwrap nullish schema with null input', () => {
-      const store = createTestStore(
-        v.object({ user: v.nullish(v.object({ name: v.string() })) }),
-        { initialInput: { user: null } }
-      );
-      expect(store.children.user.input.value).toBeNull();
-    });
-
-    test('should unwrap non_optional schema', () => {
-      const store = createTestStore(
-        v.object({ name: v.nonOptional(v.optional(v.string())) })
-      );
-      expect(store.children.name.kind).toBe('value');
-    });
-  });
-
-  describe('union schemas', () => {
-    test('should initialize for each union option', () => {
-      const store = createTestStore(
-        v.object({
-          field: v.union([
-            v.object({ a: v.string() }),
-            v.object({ b: v.number() }),
-          ]),
-        })
-      );
-      const fieldStore = store.children.field;
-      expect(fieldStore.kind).toBe('object');
-      if (fieldStore.kind === 'object') {
-        expect(fieldStore.children).toHaveProperty('a');
-        expect(fieldStore.children).toHaveProperty('b');
-      }
-    });
-  });
-
-  describe('tuple schemas', () => {
-    test('should initialize fixed tuple items', () => {
-      const store = createTestStore(
-        v.object({ tuple: v.tuple([v.string(), v.number()]) })
-      );
-      const tupleStore = store.children.tuple;
-      expect(tupleStore.kind).toBe('array');
-      if (tupleStore.kind === 'array') {
-        expect(tupleStore.children).toHaveLength(2);
-      }
-    });
-  });
-
-  describe('lazy schemas', () => {
-    test('should unwrap lazy schema', () => {
-      const store = createTestStore(
-        v.object({ name: v.lazy(() => v.string()) })
-      );
-      expect(store.children.name.kind).toBe('value');
-    });
-
-    test('should unwrap nested lazy schema', () => {
-      const store = createTestStore(
-        v.object({ user: v.lazy(() => v.object({ name: v.string() })) })
-      );
-      const userStore = store.children.user;
-      expect(userStore.kind).toBe('object');
-      if (userStore.kind === 'object') {
-        expect(userStore.children.name.kind).toBe('value');
-      }
-    });
-  });
-
-  describe('nullable/nullish + option schemas', () => {
-    test('should preserve null input for nullable variant', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.variant('type', [
-              v.object({ type: v.literal('a'), value: v.string() }),
-              v.object({ type: v.literal('b'), count: v.number() }),
-            ])
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
+      const usersStore = store.children.users;
+      expect(usersStore.kind).toBe('array');
+      if (usersStore.kind === 'array') {
+        const userStore = usersStore.children[0];
+        expect(userStore.kind).toBe('object');
+        if (userStore.kind === 'object') {
+          expect(userStore.name).toBe('["users",0]');
+          expect(userStore.children.name.name).toBe('["users",0,"name"]');
+          expect(userStore.children.name.input.value).toBe('John');
+        }
       }
     });
 
-    test('should preserve null input for nullable union', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.union([v.object({ a: v.string() }), v.object({ b: v.number() })])
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
+    test('should initialize arrays inside objects inside arrays', () => {
+      const store = createTestStore({
+        initialInput: { users: [{ tags: ['x', 'y'] }] },
+      });
+      const usersStore = store.children.users;
+      expect(usersStore.kind).toBe('array');
+      if (usersStore.kind === 'array') {
+        const userStore = usersStore.children[0];
+        expect(userStore.kind).toBe('object');
+        if (userStore.kind === 'object') {
+          const tagsStore = userStore.children.tags;
+          expect(tagsStore.kind).toBe('array');
+          if (tagsStore.kind === 'array') {
+            expect(tagsStore.children).toHaveLength(2);
+            expect(tagsStore.children[0].name).toBe('["users",0,"tags",0]');
+            expect(tagsStore.children[1].input.value).toBe('y');
+          }
+        }
       }
     });
 
-    test('should preserve null input for nullish variant', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullish(
-            v.variant('type', [
-              v.object({ type: v.literal('a'), value: v.string() }),
-            ])
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
+    test('should initialize nested arrays', () => {
+      const store = createTestStore({
+        initialInput: { matrix: [['a'], ['b', 'c']] },
+      });
+      const matrixStore = store.children.matrix;
+      expect(matrixStore.kind).toBe('array');
+      if (matrixStore.kind === 'array') {
+        expect(matrixStore.children).toHaveLength(2);
+        const rowStore = matrixStore.children[1];
+        expect(rowStore.kind).toBe('array');
+        if (rowStore.kind === 'array') {
+          expect(rowStore.children).toHaveLength(2);
+          expect(rowStore.children[1].name).toBe('["matrix",1,1]');
+          expect(rowStore.children[1].input.value).toBe('c');
+        }
       }
-    });
-
-    test('should preserve undefined input for nullish variant', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullish(
-            v.variant('type', [
-              v.object({ type: v.literal('a'), value: v.string() }),
-            ])
-          ),
-        }),
-        { initialInput: { nest: undefined } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeUndefined();
-      }
-    });
-
-    test('should initialize normally for nullable variant with value', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.variant('type', [
-              v.object({ type: v.literal('a'), value: v.string() }),
-            ])
-          ),
-        }),
-        { initialInput: { nest: { type: 'a', value: 'hello' } } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBe(true);
-        expect(nestStore.children.value.input.value).toBe('hello');
-      }
-    });
-
-    test('should preserve null input for nullable intersect', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.intersect([
-              v.object({ a: v.string() }),
-              v.object({ b: v.number() }),
-            ])
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
-      }
-    });
-  });
-
-  describe('nullable/nullish + lazy + option schemas', () => {
-    test('should preserve null input for nullable lazy variant', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.lazy(() =>
-              v.variant('type', [
-                v.object({ type: v.literal('a'), value: v.string() }),
-              ])
-            )
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
-      }
-    });
-
-    test('should preserve null input for nullable lazy union', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.lazy(() =>
-              v.union([
-                v.object({ a: v.string() }),
-                v.object({ b: v.number() }),
-              ])
-            )
-          ),
-        }),
-        { initialInput: { nest: null } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBeNull();
-      }
-    });
-
-    test('should initialize normally for nullable lazy variant with value', () => {
-      const store = createTestStore(
-        v.object({
-          nest: v.nullable(
-            v.lazy(() =>
-              v.variant('type', [
-                v.object({ type: v.literal('a'), value: v.string() }),
-              ])
-            )
-          ),
-        }),
-        { initialInput: { nest: { type: 'a', value: 'hello' } } }
-      );
-      const nestStore = store.children.nest;
-      expect(nestStore.kind).toBe('object');
-      if (nestStore.kind === 'object') {
-        expect(nestStore.input.value).toBe(true);
-        expect(nestStore.children.value.input.value).toBe('hello');
-      }
-    });
-  });
-
-  describe('unsupported schemas', () => {
-    test('should throw for record schema', () => {
-      expect(() => {
-        createTestStore(v.object({ data: v.record(v.string(), v.number()) }));
-      }).toThrow('"record" schema is not supported');
-    });
-
-    test('should throw for object_with_rest schema', () => {
-      expect(() => {
-        createTestStore(
-          v.object({ data: v.objectWithRest({ a: v.string() }, v.number()) })
-        );
-      }).toThrow('"object_with_rest" schema is not supported');
-    });
-  });
-
-  describe('reinitialization errors', () => {
-    test('should throw when reinitializing object as array', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            field: v.union([
-              v.object({ name: v.string() }),
-              v.array(v.string()),
-            ]),
-          })
-        );
-      }).toThrow('cannot be reinitialized as "array"');
-    });
-
-    test('should throw when reinitializing array as object', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            field: v.union([
-              v.array(v.string()),
-              v.object({ name: v.string() }),
-            ]),
-          })
-        );
-      }).toThrow('cannot be reinitialized as "object"');
-    });
-
-    test('should throw when variant branches have same key as value and array', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            a: v.variant('type', [
-              v.object({ type: v.literal('string'), value: v.string() }),
-              v.object({
-                type: v.literal('array'),
-                value: v.array(v.string()),
-              }),
-            ]),
-          }),
-          { initialInput: { a: { type: 'string', value: '' } } }
-        );
-      }).toThrow('cannot be reinitialized as "array"');
-    });
-
-    test('should throw when variant branches have same key as array and value', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            a: v.variant('type', [
-              v.object({
-                type: v.literal('array'),
-                value: v.array(v.string()),
-              }),
-              v.object({ type: v.literal('string'), value: v.string() }),
-            ]),
-          }),
-          { initialInput: { a: { type: 'array', value: [] } } }
-        );
-      }).toThrow('cannot be reinitialized as "value"');
-    });
-
-    test('should throw when variant branches have same key as value and object', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            a: v.variant('type', [
-              v.object({
-                type: v.literal('string'),
-                value: v.string(),
-              }),
-              v.object({
-                type: v.literal('nested'),
-                value: v.object({ x: v.number() }),
-              }),
-            ]),
-          }),
-          { initialInput: { a: { type: 'string', value: '' } } }
-        );
-      }).toThrow('cannot be reinitialized as "object"');
-    });
-
-    test('should throw when variant branches have same key as object and value', () => {
-      expect(() => {
-        createTestStore(
-          v.object({
-            a: v.variant('type', [
-              v.object({
-                type: v.literal('nested'),
-                value: v.object({ x: v.number() }),
-              }),
-              v.object({
-                type: v.literal('string'),
-                value: v.string(),
-              }),
-            ]),
-          }),
-          { initialInput: { a: { type: 'nested', value: { x: 1 } } } }
-        );
-      }).toThrow('cannot be reinitialized as "value"');
     });
   });
 });

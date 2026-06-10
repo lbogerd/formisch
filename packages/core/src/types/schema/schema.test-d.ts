@@ -1,6 +1,8 @@
 import * as v from 'valibot';
 import { describe, expectTypeOf, test } from 'vitest';
+import * as z from 'zod';
 import type { FormSchema } from './schema.ts';
+import type { StandardSchemaV1 } from './standard.ts';
 
 // Mirrors how the public APIs (e.g. `useForm`, `createForm`) constrain the form
 // root, so `@ts-expect-error` marks exactly the schemas a form must reject.
@@ -10,20 +12,33 @@ function acceptFormSchema<TSchema extends FormSchema>(
   return schema;
 }
 
+// Mirrors how submit handlers receive the validated output, so inference
+// through `StandardSchemaV1.InferOutput` can be asserted.
+declare function inferOutput<TSchema extends FormSchema>(
+  schema: TSchema
+): StandardSchemaV1.InferOutput<TSchema>;
+
+// Hand-rolled Standard Schema with an object root
+const customSchema: StandardSchemaV1<{ a: string }, { a: string }> = {
+  '~standard': {
+    version: 1,
+    vendor: 'formisch-test',
+    validate: (value) => ({ value: value as { a: string } }),
+  },
+};
+
+// Hand-rolled Standard Schema with a primitive root
+declare const customStringSchema: StandardSchemaV1<string>;
+
 describe('FormSchema', () => {
-  test('should accept object schemas at the root', () => {
+  test('should accept Valibot object schemas at the root', () => {
     acceptFormSchema(v.object({ name: v.string() }));
     acceptFormSchema(v.looseObject({ name: v.string() }));
     acceptFormSchema(v.strictObject({ name: v.string() }));
-  });
-
-  test('should accept async object schemas at the root', () => {
     acceptFormSchema(v.objectAsync({ name: v.string() }));
-    acceptFormSchema(v.looseObjectAsync({ name: v.string() }));
-    acceptFormSchema(v.strictObjectAsync({ name: v.string() }));
   });
 
-  test('should accept piped object schemas at the root', () => {
+  test('should accept piped Valibot object schemas at the root', () => {
     acceptFormSchema(
       v.pipe(
         v.object({ a: v.string(), b: v.string() }),
@@ -33,9 +48,15 @@ describe('FormSchema', () => {
         )
       )
     );
+    acceptFormSchema(
+      v.pipe(
+        v.object({ age: v.string() }),
+        v.transform((input) => ({ age: Number(input.age) }))
+      )
+    );
   });
 
-  test('should accept object combinators at the root', () => {
+  test('should accept Valibot object combinators at the root', () => {
     acceptFormSchema(
       v.intersect([v.object({ a: v.string() }), v.object({ b: v.number() })])
     );
@@ -50,97 +71,79 @@ describe('FormSchema', () => {
     );
   });
 
-  test('should accept async object combinators at the root', () => {
+  test('should accept Zod object schemas at the root', () => {
+    acceptFormSchema(z.object({ name: z.string() }));
+    acceptFormSchema(z.looseObject({ name: z.string() }));
+    acceptFormSchema(z.strictObject({ name: z.string() }));
+  });
+
+  test('should accept Zod object combinators at the root', () => {
     acceptFormSchema(
-      v.intersectAsync([
-        v.object({ a: v.string() }),
-        v.objectAsync({ b: v.number() }),
+      z.discriminatedUnion('type', [
+        z.object({ type: z.literal('a'), a: z.string() }),
+        z.object({ type: z.literal('b'), b: z.number() }),
       ])
     );
     acceptFormSchema(
-      v.unionAsync([
-        v.object({ a: v.string() }),
-        v.objectAsync({ b: v.number() }),
-      ])
-    );
-    acceptFormSchema(
-      v.variantAsync('type', [
-        v.object({ type: v.literal('a'), a: v.string() }),
-        v.objectAsync({ type: v.literal('b'), b: v.number() }),
-      ])
+      z.union([z.object({ a: z.string() }), z.object({ b: z.number() })])
     );
   });
 
-  test('should accept combinators whose options are variants (payment shape)', () => {
-    acceptFormSchema(
-      v.intersect([
-        v.object({ owner: v.pipe(v.string(), v.nonEmpty()) }),
-        v.variant('type', [
-          v.object({ type: v.literal('card'), card: v.string() }),
-          v.object({ type: v.literal('paypal'), paypal: v.string() }),
-        ]),
-      ])
-    );
-    acceptFormSchema(
-      v.union([
-        v.variant('type', [
-          v.object({ type: v.literal('a'), a: v.string() }),
-          v.object({ type: v.literal('b'), b: v.number() }),
-        ]),
-        v.object({ c: v.string() }),
-      ])
-    );
-  });
-
-  test('should accept lazy schemas wrapping objects at the root', () => {
-    acceptFormSchema(v.lazy(() => v.object({ name: v.string() })));
-    acceptFormSchema(
-      v.lazy(() =>
-        v.union([v.object({ a: v.string() }), v.object({ b: v.number() })])
-      )
-    );
-    acceptFormSchema(v.lazyAsync(() => v.objectAsync({ name: v.string() })));
+  test('should accept hand-rolled Standard Schemas with object roots', () => {
+    acceptFormSchema(customSchema);
   });
 
   test('should reject non-object schemas at the root', () => {
     // @ts-expect-error primitive root
     acceptFormSchema(v.string());
     // @ts-expect-error primitive root
-    acceptFormSchema(v.number());
+    acceptFormSchema(z.string());
+    // @ts-expect-error primitive root
+    acceptFormSchema(customStringSchema);
     // @ts-expect-error array root
     acceptFormSchema(v.array(v.object({ name: v.string() })));
-    // @ts-expect-error record root
-    acceptFormSchema(v.record(v.string(), v.string()));
     // @ts-expect-error optional-wrapped object root
     acceptFormSchema(v.optional(v.object({ name: v.string() })));
-    // @ts-expect-error lazy wrapping a non-object
-    acceptFormSchema(v.lazy(() => v.string()));
   });
 
-  test('should reject combinators with non-object options at the root', () => {
-    // @ts-expect-error intersect of primitives
-    acceptFormSchema(v.intersect([v.string(), v.number()]));
-    // @ts-expect-error union with a non-object option
-    acceptFormSchema(v.union([v.object({ a: v.string() }), v.string()]));
+  test('should reject plain non-schema objects', () => {
+    // @ts-expect-error plain object is not a schema
+    acceptFormSchema({});
+    // @ts-expect-error plain object is not a schema
+    acceptFormSchema({ name: 'string' });
+    // @ts-expect-error missing standard properties
+    acceptFormSchema({ '~standard': {} });
   });
 
-  test('should infer the output through combinator and lazy roots', () => {
-    expectTypeOf(
-      v.parse(v.object({ name: v.string() }), { name: '' })
-    ).toEqualTypeOf<{ name: string }>();
+  test('should infer input and output types of Valibot schemas', () => {
+    const schema = v.pipe(
+      v.object({ age: v.string() }),
+      v.transform((input) => ({ age: Number(input.age) }))
+    );
+    expectTypeOf<StandardSchemaV1.InferInput<typeof schema>>().toEqualTypeOf<{
+      age: string;
+    }>();
+    expectTypeOf<StandardSchemaV1.InferOutput<typeof schema>>().toEqualTypeOf<{
+      age: number;
+    }>();
+    expectTypeOf(inferOutput(schema)).toEqualTypeOf<{ age: number }>();
+  });
 
-    expectTypeOf(
-      v.parse(
-        v.lazy(() => v.object({ name: v.string() })),
-        { name: '' }
-      )
-    ).toEqualTypeOf<{ name: string }>();
+  test('should infer input and output types of Zod schemas', () => {
+    const schema = z.object({ count: z.number() });
+    expectTypeOf<StandardSchemaV1.InferInput<typeof schema>>().toEqualTypeOf<{
+      count: number;
+    }>();
+    expectTypeOf<StandardSchemaV1.InferOutput<typeof schema>>().toEqualTypeOf<{
+      count: number;
+    }>();
+    expectTypeOf(inferOutput(schema)).toEqualTypeOf<{ count: number }>();
+  });
 
-    expectTypeOf(
-      v.parse(
-        v.union([v.object({ a: v.string() }), v.object({ b: v.number() })]),
-        { a: '' }
-      )
-    ).toEqualTypeOf<{ a: string } | { b: number }>();
+  test('should infer input and output types of hand-rolled schemas', () => {
+    expectTypeOf<
+      StandardSchemaV1.InferInput<typeof customSchema>
+    >().toEqualTypeOf<{ a: string }>();
+    expectTypeOf(inferOutput(customSchema)).toEqualTypeOf<{ a: string }>();
   });
 });

@@ -1,86 +1,96 @@
-import type * as v from 'valibot';
 import { vi } from 'vitest';
 import { createFormStore } from '../form/createFormStore/createFormStore.ts';
 import type {
   FormSchema,
   InternalFormStore,
+  StandardSchemaV1,
   ValidationMode,
 } from '../types/index.ts';
+
+/**
+ * Configuration options for creating a test schema.
+ */
+interface CreateTestSchemaConfig {
+  issues?: StandardSchemaV1.Issue[] | undefined;
+}
+
+/**
+ * Creates a mock Standard Schema for testing. The schema's validate function
+ * returns the provided issues, or the input value as successful output.
+ *
+ * @param config Optional configuration for the schema.
+ *
+ * @returns A mock Standard Schema.
+ */
+export function createTestSchema(
+  config: CreateTestSchemaConfig = {}
+): FormSchema {
+  return {
+    '~standard': {
+      version: 1,
+      vendor: 'formisch-test',
+      validate: vi.fn((value: unknown) =>
+        config.issues?.length
+          ? { issues: config.issues }
+          : { value: value as Record<string, unknown> }
+      ),
+    },
+  };
+}
 
 /**
  * Configuration options for creating a test store.
  */
 interface CreateTestStoreConfig {
+  schema?: FormSchema | undefined;
   validate?: ValidationMode | undefined;
   revalidate?: Exclude<ValidationMode, 'initial'> | undefined;
-  initialInput?: unknown | undefined;
-  issues?: [v.BaseIssue<unknown>, ...v.BaseIssue<unknown>[]] | undefined;
+  initialInput?: Record<string, unknown> | undefined;
+  issues?: StandardSchemaV1.Issue[] | undefined;
 }
 
 /**
- * Creates a form store for testing with mocked parse function.
+ * Creates a form store for testing. The field structure is derived from the
+ * initial input. Unless a schema is provided, a mock Standard Schema is used
+ * whose validate function returns the configured issues, or the input value
+ * as successful output.
  *
- * @param schema The Valibot schema for the form.
  * @param config Optional configuration for the store.
  *
  * @returns An internal form store for testing.
  */
-export function createTestStore<TSchema extends FormSchema>(
-  schema: TSchema,
+export function createTestStore(
   config: CreateTestStoreConfig = {}
-): InternalFormStore<TSchema> {
-  const { validate, revalidate, initialInput, issues } = config;
-
-  const result: v.SafeParseResult<TSchema> = issues
-    ? {
-        typed: false,
-        success: false,
-        output: initialInput as v.InferOutput<TSchema>,
-        issues,
-      }
-    : {
-        typed: true,
-        success: true,
-        output: initialInput as v.InferOutput<TSchema>,
-        issues: undefined,
-      };
-
-  const parse = vi.fn().mockResolvedValue(result);
-  // `createFormStore` returns a non-generic `InternalFormStore`, so cast back to
-  // the concrete schema to keep the generic parameter meaningful for callers.
-  return createFormStore(
-    {
-      schema,
-      initialInput: initialInput as v.InferInput<TSchema>,
-      validate,
-      revalidate,
-    },
-    parse
-  ) as InternalFormStore<TSchema>;
+): InternalFormStore {
+  const { schema, validate, revalidate, initialInput, issues } = config;
+  return createFormStore({
+    schema: schema ?? createTestSchema({ issues }),
+    initialInput: initialInput ?? {},
+    validate,
+    revalidate,
+  });
 }
 
 /**
- * Creates an object path item for testing validation issues.
+ * Creates an object path segment for testing validation issues.
  *
  * @param key The object key.
- * @param value The value at the key.
  *
- * @returns An object path item.
+ * @returns An object path segment.
  */
-export function objectPath(key: string, value: unknown = ''): v.ObjectPathItem {
-  return { type: 'object', origin: 'value', input: {}, key, value };
+export function objectPath(key: string): StandardSchemaV1.PathSegment {
+  return { key };
 }
 
 /**
- * Creates an array path item for testing validation issues.
+ * Creates an array path segment for testing validation issues.
  *
  * @param key The array index.
- * @param value The value at the index.
  *
- * @returns An array path item.
+ * @returns An array path segment.
  */
-export function arrayPath(key: number, value: unknown = ''): v.ArrayPathItem {
-  return { type: 'array', origin: 'value', input: [], key, value };
+export function arrayPath(key: number): StandardSchemaV1.PathSegment {
+  return { key };
 }
 
 /**
@@ -89,21 +99,13 @@ export function arrayPath(key: number, value: unknown = ''): v.ArrayPathItem {
  * @param message The error message.
  * @param path The path to the field.
  *
- * @returns A base issue object.
+ * @returns A Standard Schema issue object.
  */
 export function validationIssue(
   message: string,
-  path?: [v.IssuePathItem, ...v.IssuePathItem[]]
-): v.BaseIssue<unknown> {
-  return {
-    kind: 'validation',
-    type: 'check',
-    input: '',
-    expected: null,
-    received: 'unknown',
-    message,
-    path,
-  };
+  path?: ReadonlyArray<PropertyKey | StandardSchemaV1.PathSegment>
+): StandardSchemaV1.Issue {
+  return { message, path };
 }
 
 /**
@@ -111,15 +113,8 @@ export function validationIssue(
  *
  * @param message The error message.
  *
- * @returns A base issue object.
+ * @returns A Standard Schema issue object.
  */
-export function schemaIssue(message: string): v.BaseIssue<unknown> {
-  return {
-    kind: 'schema',
-    type: 'object',
-    input: null,
-    expected: 'Object',
-    received: 'null',
-    message,
-  };
+export function schemaIssue(message: string): StandardSchemaV1.Issue {
+  return { message };
 }

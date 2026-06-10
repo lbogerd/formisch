@@ -1,4 +1,5 @@
 import { initializeFieldStore } from '../../field/initializeFieldStore/index.ts';
+import { reconcileFieldStore } from '../../field/reconcileFieldStore/index.ts';
 import { batch, untrack } from '../../framework/index.ts';
 import type { InternalFieldStore, PathKey } from '../../types/index.ts';
 
@@ -19,6 +20,15 @@ export function copyItemState(
   batch(() => {
     // Untrack to avoid creating reactive dependencies during copy operation
     untrack(() => {
+      // Upgrade destination field store to source kind if possible
+      if (fromInternalFieldStore.kind !== 'value') {
+        reconcileFieldStore(
+          toInternalFieldStore,
+          fromInternalFieldStore.kind,
+          false
+        );
+      }
+
       // Copy elements reference
       toInternalFieldStore.elements = fromInternalFieldStore.elements;
 
@@ -74,8 +84,6 @@ export function copyItemState(
             // Initialize field store for new child
             initializeFieldStore(
               toInternalFieldStore.children[index],
-              // @ts-expect-error
-              toInternalFieldStore.schema.item,
               undefined,
               path
             );
@@ -96,8 +104,34 @@ export function copyItemState(
         fromInternalFieldStore.kind === 'object' &&
         toInternalFieldStore.kind === 'object'
       ) {
+        // Initialize path variable for lazy parsing
+        let path: PathKey[] | undefined;
+
         // Copy state for each object property
         for (const key in fromInternalFieldStore.children) {
+          // If destination child doesn't exist, initialize it
+          if (!toInternalFieldStore.children[key]) {
+            // Parse path only when needed
+            path ??= JSON.parse(toInternalFieldStore.name) as PathKey[];
+
+            // Create empty child object
+            // @ts-expect-error
+            toInternalFieldStore.children[key] = {};
+
+            // Add current key to path
+            path.push(key);
+
+            // Initialize field store for new child
+            initializeFieldStore(
+              toInternalFieldStore.children[key],
+              undefined,
+              path
+            );
+
+            // Remove key from path for next iteration
+            path.pop();
+          }
+
           // Recursively copy child state
           copyItemState(
             fromInternalFieldStore.children[key],

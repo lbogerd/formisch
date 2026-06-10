@@ -90,7 +90,6 @@ function defineFrameworkConfig(
       '@qwik.dev/core',
       'solid-js',
       'svelte',
-      'valibot',
       'vue',
     ],
     clean: true,

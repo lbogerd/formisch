@@ -1,6 +1,34 @@
 import { initializeFieldStore } from '../../field/initializeFieldStore/index.ts';
+import { reconcileFieldStore } from '../../field/reconcileFieldStore/index.ts';
 import { batch, untrack } from '../../framework/index.ts';
 import type { InternalFieldStore, PathKey } from '../../types/index.ts';
+
+/**
+ * Initializes a missing child of a field store with an empty value field.
+ *
+ * @param internalFieldStore The parent field store.
+ * @param key The key of the missing child.
+ * @param path The parsed path of the parent field store.
+ */
+function initializeMissingChild(
+  internalFieldStore: InternalFieldStore,
+  key: PathKey,
+  path: PathKey[]
+): void {
+  // Create empty child object
+  // @ts-expect-error
+  internalFieldStore.children[key] = {};
+
+  // Add current key to path
+  path.push(key);
+
+  // Initialize field store for new child
+  // @ts-expect-error
+  initializeFieldStore(internalFieldStore.children[key], undefined, path);
+
+  // Remove key from path for next iteration
+  path.pop();
+}
 
 /**
  * Swaps the deeply nested state (signal values) between two field stores. This
@@ -19,6 +47,21 @@ export function swapItemState(
   batch(() => {
     // Untrack to avoid creating reactive dependencies during swap operation
     untrack(() => {
+      // Upgrade value field store to the other store's kind if possible
+      if (firstInternalFieldStore.kind !== 'value') {
+        reconcileFieldStore(
+          secondInternalFieldStore,
+          firstInternalFieldStore.kind,
+          false
+        );
+      } else if (secondInternalFieldStore.kind !== 'value') {
+        reconcileFieldStore(
+          firstInternalFieldStore,
+          secondInternalFieldStore.kind,
+          false
+        );
+      }
+
       // Swap elements references
       const tempElements = firstInternalFieldStore.elements;
       firstInternalFieldStore.elements = secondInternalFieldStore.elements;
@@ -84,54 +127,16 @@ export function swapItemState(
         for (let index = 0; index < maxLength; index++) {
           // If first store child doesn't exist, initialize it
           if (!firstInternalFieldStore.children[index]) {
-            // Parse path only when needed
             firstPath ??= JSON.parse(firstInternalFieldStore.name) as PathKey[];
-
-            // Create empty child object
-            // @ts-expect-error
-            firstInternalFieldStore.children[index] = {};
-
-            // Add current index to path
-            firstPath.push(index);
-
-            // Initialize field store for new child
-            initializeFieldStore(
-              firstInternalFieldStore.children[index],
-              // @ts-expect-error
-              firstInternalFieldStore.schema.item,
-              undefined,
-              firstPath
-            );
-
-            // Remove index from path for next iteration
-            firstPath.pop();
+            initializeMissingChild(firstInternalFieldStore, index, firstPath);
           }
 
           // If second store child doesn't exist, initialize it
           if (!secondInternalFieldStore.children[index]) {
-            // Parse path only when needed
             secondPath ??= JSON.parse(
               secondInternalFieldStore.name
             ) as PathKey[];
-
-            // Create empty child object
-            // @ts-expect-error
-            secondInternalFieldStore.children[index] = {};
-
-            // Add current index to path
-            secondPath.push(index);
-
-            // Initialize field store for new child
-            initializeFieldStore(
-              secondInternalFieldStore.children[index],
-              // @ts-expect-error
-              secondInternalFieldStore.schema.item,
-              undefined,
-              secondPath
-            );
-
-            // Remove index from path for next iteration
-            secondPath.pop();
+            initializeMissingChild(secondInternalFieldStore, index, secondPath);
           }
 
           // Recursively swap children
@@ -146,8 +151,31 @@ export function swapItemState(
         firstInternalFieldStore.kind === 'object' &&
         secondInternalFieldStore.kind === 'object'
       ) {
-        // Swap state for each object property
-        for (const key in firstInternalFieldStore.children) {
+        // Initialize path variables for lazy parsing
+        let firstPath: PathKey[] | undefined;
+        let secondPath: PathKey[] | undefined;
+
+        // Swap state for each object property of either store
+        // Hint: Children can diverge between the two stores because field
+        // stores are created lazily, so the union of keys is swapped.
+        for (const key of new Set([
+          ...Object.keys(firstInternalFieldStore.children),
+          ...Object.keys(secondInternalFieldStore.children),
+        ])) {
+          // If first store child doesn't exist, initialize it
+          if (!firstInternalFieldStore.children[key]) {
+            firstPath ??= JSON.parse(firstInternalFieldStore.name) as PathKey[];
+            initializeMissingChild(firstInternalFieldStore, key, firstPath);
+          }
+
+          // If second store child doesn't exist, initialize it
+          if (!secondInternalFieldStore.children[key]) {
+            secondPath ??= JSON.parse(
+              secondInternalFieldStore.name
+            ) as PathKey[];
+            initializeMissingChild(secondInternalFieldStore, key, secondPath);
+          }
+
           // Recursively swap children
           swapItemState(
             firstInternalFieldStore.children[key],

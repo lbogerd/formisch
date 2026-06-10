@@ -1,7 +1,12 @@
-import type * as v from 'valibot';
 import { getFieldInput, walkFieldStore } from '../../field/index.ts';
 import { batch, untrack } from '../../framework/index.ts';
-import type { InternalFormStore, Schema } from '../../types/index.ts';
+import type {
+  InternalArrayStore,
+  InternalFieldStore,
+  InternalFormStore,
+  PathKey,
+  StandardSchemaV1,
+} from '../../types/index.ts';
 
 /**
  * Validate form input config interface.
@@ -14,27 +19,36 @@ export interface ValidateFormInputConfig {
 }
 
 /**
- * Validates the form input using the configured Valibot schema. Parses the
+ * Validates the form input using the configured Standard Schema. Parses the
  * current form input, processes validation issues, assigns errors to fields,
  * and optionally focuses the first field with an error.
+ *
+ * Hint: Issues whose path cannot be fully resolved against the field store
+ * tree (e.g. symbol keys or fields that were never mounted) are assigned to
+ * the deepest reachable ancestor field, with the form root as last resort.
  *
  * @param internalFormStore The form store to validate.
  * @param config The validation configuration.
  *
- * @returns The Valibot validation result.
+ * @returns The Standard Schema validation result.
  */
 export async function validateFormInput(
   internalFormStore: InternalFormStore,
   config?: ValidateFormInputConfig
-): Promise<v.SafeParseResult<Schema>> {
+): Promise<StandardSchemaV1.Result<unknown>> {
   // Update validation state
   internalFormStore.validators++;
   internalFormStore.isValidating.value = true;
 
-  // Parse form input with Valibot schema
-  const result = await internalFormStore.parse(
+  // Validate form input with Standard Schema
+  let result = internalFormStore.schema['~standard'].validate(
     untrack(() => getFieldInput(internalFormStore))
   );
+
+  // Await result if schema validates asynchronously
+  if (result instanceof Promise) {
+    result = await result;
+  }
 
   // Create variables for root and nested errors
   let rootErrors: [string, ...string[]] | undefined;
@@ -49,22 +63,51 @@ export async function validateFormInput(
 
     // Process each validation issue
     for (const issue of result.issues) {
-      // If issue has path, assign to nested errors
-      if (issue.path) {
-        // Initialize path array
-        const path = [];
+      // Create variable for name of deepest reachable field
+      let name: string | undefined;
 
-        // Build path from issue path items
-        for (const pathItem of issue.path) {
-          const key = pathItem.key;
-          const keyType = typeof key;
-          const itemType = pathItem.type;
-          // Skip unsupported path types
-          if (
-            (keyType !== 'string' && keyType !== 'number') ||
-            itemType === 'map' ||
-            itemType === 'set'
-          ) {
+      // If issue has path, resolve it against the field store tree
+      if (issue.path?.length) {
+        // Initialize path array
+        const path: PathKey[] = [];
+
+        // Start resolution at form store root
+        let internalFieldStore: InternalFieldStore = internalFormStore;
+
+        // Resolve each path segment to its field store
+        for (const pathSegment of issue.path) {
+          // Extract key from path segment
+          const key =
+            typeof pathSegment === 'object' && pathSegment !== null
+              ? pathSegment.key
+              : pathSegment;
+
+          // Stop at unsupported keys (e.g. symbols)
+          if (typeof key !== 'string' && typeof key !== 'number') {
+            break;
+          }
+
+          // Stop at array fields if key is not a visible index
+          if (internalFieldStore.kind === 'array') {
+            const arrayFieldStore: InternalArrayStore = internalFieldStore;
+            if (
+              typeof key !== 'number' ||
+              key >= untrack(() => arrayFieldStore.items.value).length ||
+              !arrayFieldStore.children[key]
+            ) {
+              break;
+            }
+            internalFieldStore = arrayFieldStore.children[key];
+
+            // Stop at object fields if child does not exist
+          } else if (internalFieldStore.kind === 'object') {
+            if (!internalFieldStore.children[key]) {
+              break;
+            }
+            internalFieldStore = internalFieldStore.children[key];
+
+            // Stop at value fields as they have no children
+          } else {
             break;
           }
 
@@ -72,10 +115,14 @@ export async function validateFormInput(
           path.push(key);
         }
 
-        // Convert path to name of field
-        const name = JSON.stringify(path);
+        // Set name if any path segment could be resolved
+        if (path.length) {
+          name = JSON.stringify(path);
+        }
+      }
 
-        // Append or initialize nested errors
+      // If issue maps to a nested field, append or initialize nested errors
+      if (name) {
         const fieldErrors = nestedErrors[name];
         if (fieldErrors) {
           fieldErrors.push(issue.message);

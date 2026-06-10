@@ -1,11 +1,13 @@
 import { batch, createId } from '../../framework/index.ts';
 import type { InternalFieldStore, PathKey } from '../../types/index.ts';
+import { isPlainObject } from '../../values.ts';
 import { initializeFieldStore } from '../initializeFieldStore/index.ts';
+import { reconcileFieldStore } from '../reconcileFieldStore/index.ts';
 
 /**
  * Sets the initial input for a field store and all its children recursively.
- * For arrays, initializes missing children if needed. Updates `initialInput`
- * and `initialItems` properties.
+ * For arrays and objects, initializes missing children if needed. Updates
+ * `initialInput` and `initialItems` properties.
  *
  * @param internalFieldStore The field store to update.
  * @param initialInput The initial input value.
@@ -16,6 +18,15 @@ export function setInitialFieldInput(
 ): void {
   // Batch all state updates for optimal reactivity performance
   batch(() => {
+    // If value field receives a composite initial input, upgrade it first
+    if (internalFieldStore.kind === 'value') {
+      if (Array.isArray(initialInput)) {
+        reconcileFieldStore(internalFieldStore, 'array');
+      } else if (isPlainObject(initialInput)) {
+        reconcileFieldStore(internalFieldStore, 'object');
+      }
+    }
+
     // If field store is array, handle array initial input
     if (internalFieldStore.kind === 'array') {
       // Set array input
@@ -51,8 +62,6 @@ export function setInitialFieldInput(
           initializeFieldStore(
             internalFieldStore.children[index],
             // @ts-expect-error
-            internalFieldStore.schema.item,
-            // @ts-expect-error
             initialArrayInput[index],
             path
           );
@@ -82,6 +91,37 @@ export function setInitialFieldInput(
       // Set object input
       internalFieldStore.input.value =
         initialInput == null ? initialInput : true;
+
+      // If initial input contains unknown keys, initialize children for them
+      if (isPlainObject(initialInput)) {
+        // Initialize path variable for lazy parsing
+        let path: PathKey[] | undefined;
+
+        // Initialize child for each unknown initial input key
+        for (const key in initialInput) {
+          if (!internalFieldStore.children[key]) {
+            // Parse path only when needed
+            path ??= JSON.parse(internalFieldStore.name) as PathKey[];
+
+            // Create empty child object
+            // @ts-expect-error
+            internalFieldStore.children[key] = {};
+
+            // Add current key to path
+            path.push(key);
+
+            // Initialize field store for new child
+            initializeFieldStore(
+              internalFieldStore.children[key],
+              initialInput[key],
+              path
+            );
+
+            // Remove key from path for next iteration
+            path.pop();
+          }
+        }
+      }
 
       // Set initial input for each object property
       for (const key in internalFieldStore.children) {
