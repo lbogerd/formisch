@@ -15,15 +15,16 @@
   "engines": {
     "node": ">=22"
   },
+  "//": "TODO(standard-schema): The framework and playground scripts are temporarily scoped to React until the other framework wrappers are migrated to Standard Schema.",
   "scripts": {
     "build": "pnpm run build-packages && pnpm run build-frameworks",
     "build-packages": "pnpm --filter './packages/*' --if-present build",
-    "build-frameworks": "pnpm --filter './frameworks/*' --if-present build",
+    "build-frameworks": "pnpm --filter './frameworks/react' --if-present build",
     "lint": "pnpm run lint-packages && pnpm run lint-frameworks && pnpm run lint-website && pnpm run lint-playgrounds",
     "lint-packages": "pnpm --filter './packages/*' --if-present lint",
-    "lint-frameworks": "pnpm --filter './frameworks/*' --if-present lint",
+    "lint-frameworks": "pnpm --filter './frameworks/react' --if-present lint",
     "lint-website": "pnpm --filter './website' --if-present lint",
-    "lint-playgrounds": "pnpm --filter './playgrounds/*' --if-present lint",
+    "lint-playgrounds": "pnpm --filter './playgrounds/react-zod' --if-present lint",
     "format": "pnpm run format-packages && pnpm run format-frameworks && pnpm run format-website && pnpm run format-playgrounds",
     "format-packages": "pnpm --filter './packages/*' --if-present format",
     "format-frameworks": "pnpm --filter './frameworks/*' --if-present format",
@@ -36,7 +37,7 @@
     "format-check-playgrounds": "pnpm --filter './playgrounds/*' --if-present format.check",
     "test": "pnpm run test-packages && pnpm run test-frameworks",
     "test-packages": "pnpm --filter './packages/*' --if-present test",
-    "test-frameworks": "pnpm --filter './frameworks/*' --if-present test",
+    "test-frameworks": "pnpm --filter './frameworks/react' --if-present test",
     "check-versions": "pnpm --filter formisch-scripts check-versions",
     "create-releases": "pnpm --filter formisch-scripts create-releases",
     "scan": "cve-lite . --report"
