@@ -1,0 +1,157 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"owner\"]": "",
+      "[\"type\"]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit empty form",
+    "fields": {
+      "[\"owner\"]": "",
+      "[\"type\"]": ""
+    },
+    "errors": {
+      "[\"owner\"]-error": "Please enter your name.",
+      "[\"type\"]-error": "Please select the payment type."
+    },
+    "submits": []
+  },
+  {
+    "step": "fill owner and select card type",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "card",
+      "[\"card\",\"number\"]": "",
+      "[\"card\",\"expiration\"]": ""
+    },
+    "errors": {
+      "[\"card\",\"number\"]-error": "Please enter your card number.",
+      "[\"card\",\"expiration\"]-error": "Please enter the expiration date."
+    },
+    "submits": []
+  },
+  {
+    "step": "submit card type without card details",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "card",
+      "[\"card\",\"number\"]": "",
+      "[\"card\",\"expiration\"]": ""
+    },
+    "errors": {
+      "[\"card\",\"number\"]-error": "Please enter your card number.",
+      "[\"card\",\"expiration\"]-error": "Please enter the expiration date."
+    },
+    "submits": []
+  },
+  {
+    "step": "submit badly formatted card details",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "card",
+      "[\"card\",\"number\"]": "1234",
+      "[\"card\",\"expiration\"]": "13/30"
+    },
+    "errors": {
+      "[\"card\",\"number\"]-error": "The card number is badly formatted.",
+      "[\"card\",\"expiration\"]-error": "The expiration date is badly formatted."
+    },
+    "submits": []
+  },
+  {
+    "step": "submit valid card details",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "card",
+      "[\"card\",\"number\"]": "4242 4242 4242 4242",
+      "[\"card\",\"expiration\"]": "12/29"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "owner": "Jane Doe",
+        "type": "card",
+        "card": {
+          "number": "4242 4242 4242 4242",
+          "expiration": "12/29"
+        }
+      }
+    ]
+  },
+  {
+    "step": "switch to paypal and submit without email",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "paypal",
+      "[\"paypal\",\"email\"]": ""
+    },
+    "errors": {
+      "[\"paypal\",\"email\"]-error": "Please enter your PayPal email."
+    },
+    "submits": [
+      {
+        "owner": "Jane Doe",
+        "type": "card",
+        "card": {
+          "number": "4242 4242 4242 4242",
+          "expiration": "12/29"
+        }
+      }
+    ]
+  },
+  {
+    "step": "submit valid paypal details",
+    "fields": {
+      "[\"owner\"]": "Jane Doe",
+      "[\"type\"]": "paypal",
+      "[\"paypal\",\"email\"]": "jane.doe@example.com"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "owner": "Jane Doe",
+        "type": "card",
+        "card": {
+          "number": "4242 4242 4242 4242",
+          "expiration": "12/29"
+        }
+      },
+      {
+        "owner": "Jane Doe",
+        "type": "paypal",
+        "paypal": {
+          "email": "jane.doe@example.com"
+        }
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"owner\"]": "",
+      "[\"type\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "owner": "Jane Doe",
+        "type": "card",
+        "card": {
+          "number": "4242 4242 4242 4242",
+          "expiration": "12/29"
+        }
+      },
+      {
+        "owner": "Jane Doe",
+        "type": "paypal",
+        "paypal": {
+          "email": "jane.doe@example.com"
+        }
+      }
+    ]
+  }
+]

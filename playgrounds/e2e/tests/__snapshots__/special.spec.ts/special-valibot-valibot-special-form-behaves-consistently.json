@@ -1,0 +1,353 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"number\"]": "",
+      "[\"range\"]": "50",
+      "[\"checkbox\",\"array\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"checkbox\",\"boolean\"]": false,
+      "[\"radio\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"select\",\"array\"]": [],
+      "[\"select\",\"string\"]": "",
+      "[\"file\",\"list\"]": "",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit untouched form",
+    "fields": {
+      "[\"number\"]": "",
+      "[\"range\"]": "50",
+      "[\"checkbox\",\"array\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"checkbox\",\"boolean\"]": false,
+      "[\"radio\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"select\",\"array\"]": [],
+      "[\"select\",\"string\"]": "",
+      "[\"file\",\"list\"]": "",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      }
+    ]
+  },
+  {
+    "step": "fill number and move range slider",
+    "fields": {
+      "[\"number\"]": "42",
+      "[\"range\"]": "55",
+      "[\"checkbox\",\"array\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"checkbox\",\"boolean\"]": false,
+      "[\"radio\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"select\",\"array\"]": [],
+      "[\"select\",\"string\"]": "",
+      "[\"file\",\"list\"]": "",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      }
+    ]
+  },
+  {
+    "step": "toggle checkboxes and select radio option",
+    "fields": {
+      "[\"number\"]": "42",
+      "[\"range\"]": "55",
+      "[\"checkbox\",\"array\"]": [
+        true,
+        false,
+        true
+      ],
+      "[\"checkbox\",\"boolean\"]": true,
+      "[\"radio\"]": [
+        false,
+        true,
+        false
+      ],
+      "[\"select\",\"array\"]": [],
+      "[\"select\",\"string\"]": "",
+      "[\"file\",\"list\"]": "",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      }
+    ]
+  },
+  {
+    "step": "select multiple and single options",
+    "fields": {
+      "[\"number\"]": "42",
+      "[\"range\"]": "55",
+      "[\"checkbox\",\"array\"]": [
+        true,
+        false,
+        true
+      ],
+      "[\"checkbox\",\"boolean\"]": true,
+      "[\"radio\"]": [
+        false,
+        true,
+        false
+      ],
+      "[\"select\",\"array\"]": [
+        "option_1",
+        "option_3"
+      ],
+      "[\"select\",\"string\"]": "option_2",
+      "[\"file\",\"list\"]": "",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      }
+    ]
+  },
+  {
+    "step": "choose files",
+    "fields": {
+      "[\"number\"]": "42",
+      "[\"range\"]": "55",
+      "[\"checkbox\",\"array\"]": [
+        true,
+        false,
+        true
+      ],
+      "[\"checkbox\",\"boolean\"]": true,
+      "[\"radio\"]": [
+        false,
+        true,
+        false
+      ],
+      "[\"select\",\"array\"]": [
+        "option_1",
+        "option_3"
+      ],
+      "[\"select\",\"string\"]": "option_2",
+      "[\"file\",\"list\"]": "C:\\fakepath\\first.txt",
+      "[\"file\",\"item\"]": "C:\\fakepath\\item.txt"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      }
+    ]
+  },
+  {
+    "step": "submit filled form",
+    "fields": {
+      "[\"number\"]": "42",
+      "[\"range\"]": "55",
+      "[\"checkbox\",\"array\"]": [
+        true,
+        false,
+        true
+      ],
+      "[\"checkbox\",\"boolean\"]": true,
+      "[\"radio\"]": [
+        false,
+        true,
+        false
+      ],
+      "[\"select\",\"array\"]": [
+        "option_1",
+        "option_3"
+      ],
+      "[\"select\",\"string\"]": "option_2",
+      "[\"file\",\"list\"]": "C:\\fakepath\\first.txt",
+      "[\"file\",\"item\"]": "C:\\fakepath\\item.txt"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      },
+      {
+        "number": "42",
+        "range": "55",
+        "checkbox": {
+          "array": [
+            "option_1",
+            "option_3"
+          ],
+          "boolean": true
+        },
+        "radio": "option_2",
+        "select": {
+          "array": [
+            "option_1",
+            "option_3"
+          ],
+          "string": "option_2"
+        },
+        "file": {
+          "list": [
+            {},
+            {}
+          ],
+          "item": {}
+        }
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"number\"]": "",
+      "[\"range\"]": "50",
+      "[\"checkbox\",\"array\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"checkbox\",\"boolean\"]": false,
+      "[\"radio\"]": [
+        false,
+        false,
+        false
+      ],
+      "[\"select\",\"array\"]": [],
+      "[\"select\",\"string\"]": "",
+      "[\"file\",\"list\"]": "C:\\fakepath\\first.txt",
+      "[\"file\",\"item\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "range": "50",
+        "checkbox": {
+          "array": [],
+          "boolean": false
+        },
+        "select": {
+          "array": []
+        },
+        "file": {
+          "list": []
+        }
+      },
+      {
+        "number": "42",
+        "range": "55",
+        "checkbox": {
+          "array": [
+            "option_1",
+            "option_3"
+          ],
+          "boolean": true
+        },
+        "radio": "option_2",
+        "select": {
+          "array": [
+            "option_1",
+            "option_3"
+          ],
+          "string": "option_2"
+        },
+        "file": {
+          "list": [
+            {},
+            {}
+          ],
+          "item": {}
+        }
+      }
+    ]
+  }
+]

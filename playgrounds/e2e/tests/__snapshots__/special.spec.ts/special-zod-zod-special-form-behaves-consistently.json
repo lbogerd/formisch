@@ -1,0 +1,330 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        true,
+        false
+      ],
+      "[\"payment\",\"card\",\"number\"]": "",
+      "[\"note\"]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit without card number",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        true,
+        false
+      ],
+      "[\"payment\",\"card\",\"number\"]": "",
+      "[\"note\"]": ""
+    },
+    "errors": {
+      "[\"payment\",\"card\",\"number\"]-error": "Please enter your card number."
+    },
+    "submits": []
+  },
+  {
+    "step": "fill card number and submit",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        true,
+        false
+      ],
+      "[\"payment\",\"card\",\"number\"]": "1234 5678 9012 3456",
+      "[\"note\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "switch to paypal and submit without email",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "",
+      "[\"note\"]": ""
+    },
+    "errors": {
+      "[\"payment\",\"paypal\",\"email\"]-error": "Please enter your PayPal email."
+    },
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "submit badly formatted paypal email",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "invalid-email",
+      "[\"note\"]": ""
+    },
+    "errors": {
+      "[\"payment\",\"paypal\",\"email\"]-error": "The email address is badly formatted."
+    },
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "submit valid paypal email",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "jane.doe@example.com",
+      "[\"note\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "submit too long note",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "jane.doe@example.com",
+      "[\"note\"]": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "errors": {
+      "[\"note\"]-error": "Your note is too long."
+    },
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "fix note and add four tags",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "jane.doe@example.com",
+      "[\"note\"]": "A short note",
+      "[\"tags\",0]": "",
+      "[\"tags\",1]": "",
+      "[\"tags\",2]": "",
+      "[\"tags\",3]": ""
+    },
+    "errors": {
+      "[\"tags\",0]-error": "Please enter a tag.",
+      "[\"tags\",1]-error": "Please enter a tag.",
+      "[\"tags\",2]-error": "Please enter a tag.",
+      "[\"tags\",3]-error": "Please enter a tag.",
+      "tags-error": "You can only add up to 3 tags."
+    },
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "fill three tags and submit too many empty",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "jane.doe@example.com",
+      "[\"note\"]": "A short note",
+      "[\"tags\",0]": "alpha",
+      "[\"tags\",1]": "beta",
+      "[\"tags\",2]": "gamma",
+      "[\"tags\",3]": ""
+    },
+    "errors": {
+      "[\"tags\",3]-error": "Please enter a tag.",
+      "tags-error": "You can only add up to 3 tags."
+    },
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "step": "remove last tag and submit valid form",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        false,
+        true
+      ],
+      "[\"payment\",\"paypal\",\"email\"]": "jane.doe@example.com",
+      "[\"note\"]": "A short note",
+      "[\"tags\",0]": "alpha",
+      "[\"tags\",1]": "beta",
+      "[\"tags\",2]": "gamma"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        },
+        "note": "A short note",
+        "tags": [
+          "alpha",
+          "beta",
+          "gamma"
+        ]
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"payment\",\"type\"]": [
+        true,
+        false
+      ],
+      "[\"payment\",\"card\",\"number\"]": "",
+      "[\"note\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "payment": {
+          "type": "card",
+          "card": {
+            "number": "1234 5678 9012 3456"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        }
+      },
+      {
+        "payment": {
+          "type": "paypal",
+          "paypal": {
+            "email": "jane.doe@example.com"
+          }
+        },
+        "note": "A short note",
+        "tags": [
+          "alpha",
+          "beta",
+          "gamma"
+        ]
+      }
+    ]
+  }
+]

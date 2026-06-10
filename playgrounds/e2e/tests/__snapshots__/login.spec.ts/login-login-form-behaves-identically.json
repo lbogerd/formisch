@@ -1,0 +1,91 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"email\"]": "",
+      "[\"password\"]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit empty form",
+    "fields": {
+      "[\"email\"]": "",
+      "[\"password\"]": ""
+    },
+    "errors": {
+      "[\"email\"]-error": "Please enter your email.",
+      "[\"password\"]-error": "Please enter your password."
+    },
+    "submits": []
+  },
+  {
+    "step": "submit badly formatted email and short password",
+    "fields": {
+      "[\"email\"]": "invalid-email",
+      "[\"password\"]": "short"
+    },
+    "errors": {
+      "[\"email\"]-error": "The email address is badly formatted.",
+      "[\"password\"]-error": "Your password must have 8 characters or more."
+    },
+    "submits": []
+  },
+  {
+    "step": "fix email but keep short password",
+    "fields": {
+      "[\"email\"]": "jane.doe@example.com",
+      "[\"password\"]": "short"
+    },
+    "errors": {
+      "[\"password\"]-error": "Your password must have 8 characters or more."
+    },
+    "submits": []
+  },
+  {
+    "step": "submit valid credentials",
+    "fields": {
+      "[\"email\"]": "jane.doe@example.com",
+      "[\"password\"]": "super-secret-password"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "email": "jane.doe@example.com",
+        "password": "super-secret-password"
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"email\"]": "",
+      "[\"password\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "email": "jane.doe@example.com",
+        "password": "super-secret-password"
+      }
+    ]
+  },
+  {
+    "step": "submit empty form after reset",
+    "fields": {
+      "[\"email\"]": "",
+      "[\"password\"]": ""
+    },
+    "errors": {
+      "[\"email\"]-error": "Please enter your email.",
+      "[\"password\"]-error": "Please enter your password."
+    },
+    "submits": [
+      {
+        "email": "jane.doe@example.com",
+        "password": "super-secret-password"
+      }
+    ]
+  }
+]

@@ -1,0 +1,218 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Item 1",
+      "[\"items\",0,\"options\",0]": "Option 1",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "edit first item label and first option",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Apples",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "add option to first item and fill it",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Apples",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",0,\"options\",2]": "Bananas",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "move first option of first item to end",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Option 2",
+      "[\"items\",0,\"options\",1]": "Bananas",
+      "[\"items\",0,\"options\",2]": "Apples",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "swap first two options of first item",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Bananas",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",0,\"options\",2]": "Apples",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "add new item",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Bananas",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",0,\"options\",2]": "Apples",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2",
+      "[\"items\",2,\"label\"]": "",
+      "[\"items\",2,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "move first item to end",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Bananas",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",0,\"options\",2]": "Apples",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2",
+      "[\"items\",2,\"label\"]": "",
+      "[\"items\",2,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "swap first two items",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Groceries",
+      "[\"items\",0,\"options\",0]": "Bananas",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",0,\"options\",2]": "Apples",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2",
+      "[\"items\",2,\"label\"]": "",
+      "[\"items\",2,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "replace first item",
+    "fields": {
+      "[\"items\",0,\"label\"]": "",
+      "[\"items\",0,\"options\",0]": "",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2",
+      "[\"items\",2,\"label\"]": "",
+      "[\"items\",2,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "delete first option of first item",
+    "fields": {
+      "[\"items\",0,\"label\"]": "",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2",
+      "[\"items\",2,\"label\"]": "",
+      "[\"items\",2,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "delete first item",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Item 2",
+      "[\"items\",0,\"options\",0]": "Option 1",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",1,\"label\"]": "",
+      "[\"items\",1,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit form",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Item 2",
+      "[\"items\",0,\"options\",0]": "Option 1",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",1,\"label\"]": "",
+      "[\"items\",1,\"options\",0]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "items": [
+          {
+            "label": "Item 2",
+            "options": [
+              "Option 1",
+              "Option 2"
+            ]
+          },
+          {
+            "label": "",
+            "options": [
+              ""
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"items\",0,\"label\"]": "Item 1",
+      "[\"items\",0,\"options\",0]": "Option 1",
+      "[\"items\",0,\"options\",1]": "Option 2",
+      "[\"items\",1,\"label\"]": "Item 2",
+      "[\"items\",1,\"options\",0]": "Option 1",
+      "[\"items\",1,\"options\",1]": "Option 2"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "items": [
+          {
+            "label": "Item 2",
+            "options": [
+              "Option 1",
+              "Option 2"
+            ]
+          },
+          {
+            "label": "",
+            "options": [
+              ""
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

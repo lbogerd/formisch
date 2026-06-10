@@ -1,0 +1,291 @@
+[
+  {
+    "step": "initial",
+    "fields": {
+      "[\"heading\"]": "",
+      "[\"todos\",0,\"label\"]": "",
+      "[\"todos\",0,\"deadline\"]": ""
+    },
+    "errors": {},
+    "submits": []
+  },
+  {
+    "step": "submit empty form",
+    "fields": {
+      "[\"heading\"]": "",
+      "[\"todos\",0,\"label\"]": "",
+      "[\"todos\",0,\"deadline\"]": ""
+    },
+    "errors": {
+      "[\"heading\"]-error": "Please enter a heading.",
+      "[\"todos\",0,\"label\"]-error": "Please enter a label.",
+      "[\"todos\",0,\"deadline\"]-error": "Please enter a deadline."
+    },
+    "submits": []
+  },
+  {
+    "step": "fill heading and first todo then submit",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy milk",
+      "[\"todos\",0,\"deadline\"]": "2026-07-01"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "add four more todos and submit too many",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy milk",
+      "[\"todos\",0,\"deadline\"]": "2026-07-01",
+      "[\"todos\",1,\"label\"]": "",
+      "[\"todos\",1,\"deadline\"]": "",
+      "[\"todos\",2,\"label\"]": "",
+      "[\"todos\",2,\"deadline\"]": "",
+      "[\"todos\",3,\"label\"]": "",
+      "[\"todos\",3,\"deadline\"]": "",
+      "[\"todos\",4,\"label\"]": "",
+      "[\"todos\",4,\"deadline\"]": ""
+    },
+    "errors": {
+      "[\"todos\",1,\"label\"]-error": "Please enter a label.",
+      "[\"todos\",1,\"deadline\"]-error": "Please enter a deadline.",
+      "[\"todos\",2,\"label\"]-error": "Please enter a label.",
+      "[\"todos\",2,\"deadline\"]-error": "Please enter a deadline.",
+      "[\"todos\",3,\"label\"]-error": "Please enter a label.",
+      "[\"todos\",3,\"deadline\"]-error": "Please enter a deadline.",
+      "[\"todos\",4,\"label\"]-error": "Please enter a label.",
+      "[\"todos\",4,\"deadline\"]-error": "Please enter a deadline.",
+      "todos-error": "You can only add up to 4 todos."
+    },
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "remove last todo and fill the rest",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy milk",
+      "[\"todos\",0,\"deadline\"]": "2026-07-01",
+      "[\"todos\",1,\"label\"]": "Buy eggs",
+      "[\"todos\",1,\"deadline\"]": "2026-07-02",
+      "[\"todos\",2,\"label\"]": "Buy bread",
+      "[\"todos\",2,\"deadline\"]": "2026-07-03",
+      "[\"todos\",3,\"label\"]": "Buy cheese",
+      "[\"todos\",3,\"deadline\"]": "2026-07-04"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "swap first two todos",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy eggs",
+      "[\"todos\",0,\"deadline\"]": "2026-07-02",
+      "[\"todos\",1,\"label\"]": "Buy milk",
+      "[\"todos\",1,\"deadline\"]": "2026-07-01",
+      "[\"todos\",2,\"label\"]": "Buy bread",
+      "[\"todos\",2,\"deadline\"]": "2026-07-03",
+      "[\"todos\",3,\"label\"]": "Buy cheese",
+      "[\"todos\",3,\"deadline\"]": "2026-07-04"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "move first todo to end",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy milk",
+      "[\"todos\",0,\"deadline\"]": "2026-07-01",
+      "[\"todos\",1,\"label\"]": "Buy bread",
+      "[\"todos\",1,\"deadline\"]": "2026-07-03",
+      "[\"todos\",2,\"label\"]": "Buy cheese",
+      "[\"todos\",2,\"deadline\"]": "2026-07-04",
+      "[\"todos\",3,\"label\"]": "Buy eggs",
+      "[\"todos\",3,\"deadline\"]": "2026-07-02"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "submit valid todos",
+    "fields": {
+      "[\"heading\"]": "Shopping list",
+      "[\"todos\",0,\"label\"]": "Buy milk",
+      "[\"todos\",0,\"deadline\"]": "2026-07-01",
+      "[\"todos\",1,\"label\"]": "Buy bread",
+      "[\"todos\",1,\"deadline\"]": "2026-07-03",
+      "[\"todos\",2,\"label\"]": "Buy cheese",
+      "[\"todos\",2,\"deadline\"]": "2026-07-04",
+      "[\"todos\",3,\"label\"]": "Buy eggs",
+      "[\"todos\",3,\"deadline\"]": "2026-07-02"
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      },
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          },
+          {
+            "label": "Buy bread",
+            "deadline": "2026-07-03"
+          },
+          {
+            "label": "Buy cheese",
+            "deadline": "2026-07-04"
+          },
+          {
+            "label": "Buy eggs",
+            "deadline": "2026-07-02"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "remove all todos and submit",
+    "fields": {
+      "[\"heading\"]": "Shopping list"
+    },
+    "errors": {
+      "todos-error": "Please add at least one todo."
+    },
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      },
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          },
+          {
+            "label": "Buy bread",
+            "deadline": "2026-07-03"
+          },
+          {
+            "label": "Buy cheese",
+            "deadline": "2026-07-04"
+          },
+          {
+            "label": "Buy eggs",
+            "deadline": "2026-07-02"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "step": "reset form",
+    "fields": {
+      "[\"heading\"]": "",
+      "[\"todos\",0,\"label\"]": "",
+      "[\"todos\",0,\"deadline\"]": ""
+    },
+    "errors": {},
+    "submits": [
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          }
+        ]
+      },
+      {
+        "heading": "Shopping list",
+        "todos": [
+          {
+            "label": "Buy milk",
+            "deadline": "2026-07-01"
+          },
+          {
+            "label": "Buy bread",
+            "deadline": "2026-07-03"
+          },
+          {
+            "label": "Buy cheese",
+            "deadline": "2026-07-04"
+          },
+          {
+            "label": "Buy eggs",
+            "deadline": "2026-07-02"
+          }
+        ]
+      }
+    ]
+  }
+]
