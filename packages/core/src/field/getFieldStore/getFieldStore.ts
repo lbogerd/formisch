@@ -1,3 +1,4 @@
+import { batch, untrack } from '../../framework/index.ts';
 import type {
   InternalFieldStore,
   InternalFormStore,
@@ -51,6 +52,27 @@ export function getFieldStore(
       );
       // @ts-expect-error
       internalFieldStore.children[key] = childFieldStore;
+
+      // Mark object containers as present so that `getFieldInput` includes
+      // their lazily created children in the form input. This mirrors the
+      // eager schema-based initialization of v0.5, where every materialized
+      // object was present. Explicit `null` inputs are preserved, and array
+      // containers are excluded because their input is governed by their
+      // visible items, which are managed via the array methods.
+      if (internalFieldStore.kind === 'object') {
+        const objectFieldStore = internalFieldStore;
+        batch(() => {
+          for (const inputSignal of [
+            objectFieldStore.initialInput,
+            objectFieldStore.startInput,
+            objectFieldStore.input,
+          ]) {
+            if (untrack(() => inputSignal.value) === undefined) {
+              inputSignal.value = true;
+            }
+          }
+        });
+      }
     }
 
     // Navigate to child at current path key

@@ -4,7 +4,9 @@ import { FormFooter, FormHeader, Select, TextInput } from '../../components';
 
 const PaymentFormSchema = z.intersection(
   z.object({
-    owner: z.string().min(1, 'Please enter your name.'),
+    owner: z
+      .string('Please enter your name.')
+      .min(1, 'Please enter your name.'),
   }),
   z.discriminatedUnion(
     'type',
@@ -13,14 +15,14 @@ const PaymentFormSchema = z.intersection(
         type: z.literal('card'),
         card: z.object({
           number: z
-            .string()
+            .string('Please enter your card number.')
             .min(1, 'Please enter your card number.')
             .regex(
               /^(?:\d[ -]?){12,18}\d$/,
               'The card number is badly formatted.'
             ),
           expiration: z
-            .string()
+            .string('Please enter the expiration date.')
             .min(1, 'Please enter the expiration date.')
             .regex(
               /^(?:0[1-9]|1[0-2])\/(?:2[5-9]|3[0-9])$/,
@@ -32,7 +34,7 @@ const PaymentFormSchema = z.intersection(
         type: z.literal('paypal'),
         paypal: z.object({
           email: z
-            .string()
+            .string('Please enter your PayPal email.')
             .min(1, 'Please enter your PayPal email.')
             .pipe(z.email('The email address is badly formatted.')),
         }),

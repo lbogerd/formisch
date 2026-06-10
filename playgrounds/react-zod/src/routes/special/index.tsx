@@ -29,14 +29,16 @@ const SpecialFormSchema = z.object({
     z.object({
       type: z.literal('card'),
       card: z.object({
-        number: z.string().min(1, 'Please enter your card number.'),
+        number: z
+          .string('Please enter your card number.')
+          .min(1, 'Please enter your card number.'),
       }),
     }),
     z.object({
       type: z.literal('paypal'),
       paypal: z.object({
         email: z
-          .string()
+          .string('Please enter your PayPal email.')
           .min(1, 'Please enter your PayPal email.')
           .pipe(z.email('The email address is badly formatted.')),
       }),

@@ -9,6 +9,7 @@ import {
   setFieldBool,
   setFieldInput,
   type StandardSchemaV1,
+  untrack,
   validateIfRequired,
   type ValidPath,
 } from '@formisch/core/react';
@@ -53,12 +54,19 @@ export function useField(form: FormStore, config: UseFieldConfig): FieldStore {
   const internalFieldStore = getFieldStore(internalFormStore, config.path);
 
   useEffect(() => {
+    // If the form was already submitted, revalidate after mount so that
+    // lazily created fields (e.g. a union branch that mounts after the
+    // discriminator changes) pick up their validation errors. The last
+    // validation ran before these fields were part of the form input.
+    if (untrack(() => internalFormStore.isSubmitted.value)) {
+      validateIfRequired(internalFormStore, internalFieldStore, 'input');
+    }
     return () => {
       internalFieldStore.elements = internalFieldStore.elements.filter(
         (element) => element.isConnected
       );
     };
-  }, [internalFieldStore]);
+  }, [internalFormStore, internalFieldStore]);
 
   return useMemo(
     () => ({

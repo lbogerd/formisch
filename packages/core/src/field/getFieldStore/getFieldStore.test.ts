@@ -95,6 +95,18 @@ describe('getFieldStore', () => {
       }
     });
 
+    test('should mark object container as present when child is created', () => {
+      const store = createTestStore();
+      getFieldStore(store, ['user', 'name']);
+      const userStore = store.children.user;
+      expect(userStore.kind).toBe('object');
+      if (userStore.kind === 'object') {
+        expect(userStore.initialInput.value).toBe(true);
+        expect(userStore.startInput.value).toBe(true);
+        expect(userStore.input.value).toBe(true);
+      }
+    });
+
     test('should upgrade nullish field store while traversing', () => {
       const store = createTestStore({ initialInput: { user: null } });
       const field = getFieldStore(store, ['user', 'name']);
