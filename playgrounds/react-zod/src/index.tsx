@@ -4,6 +4,8 @@ import { Tabs } from './components';
 import './global.css';
 import { useEventListener } from './hooks';
 import Login from './routes/login';
+import Nested from './routes/nested';
+import Payment from './routes/payment';
 import Special from './routes/special';
 import Todos from './routes/todos';
 import { disableTransitions } from './utils';
@@ -13,13 +15,15 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <Tabs items={['Login', 'Todos', 'Special']} />
+      <Tabs items={['Login', 'Payment', 'Todos', 'Special', 'Nested']} />
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/payment" element={<Payment />} />
           <Route path="/todos" element={<Todos />} />
           <Route path="/special" element={<Special />} />
+          <Route path="/nested" element={<Nested />} />
         </Routes>
       </main>
     </BrowserRouter>
