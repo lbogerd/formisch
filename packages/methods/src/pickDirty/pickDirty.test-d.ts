@@ -1,16 +1,15 @@
 import type { DeepPartial } from '@formisch/core';
-import * as v from 'valibot';
 import { describe, expectTypeOf, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { pickDirty } from './pickDirty.ts';
 
 describe('pickDirty', () => {
-  const store = createTestStore(
-    v.object({
-      name: v.string(),
-      address: v.object({ street: v.string(), zip: v.number() }),
-    })
-  );
+  const store = createTestStore<{
+    name: string;
+    address: { street: string; zip: number };
+  }>({
+    initialInput: { name: '', address: { street: '', zip: 0 } },
+  });
 
   test('should return a deep partial of the supplied value or undefined', () => {
     type Value = { name: string; age: number };

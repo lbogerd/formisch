@@ -59,9 +59,9 @@ export function handleSubmit(
         shouldFocus: true,
       });
 
-      if (result.success) {
+      if (!result.issues) {
         // @ts-expect-error - union of SubmitHandler and SubmitEventHandler
-        await handler(result.output, event);
+        await handler(result.value, event);
       }
 
       // If an error occurred, set form errors

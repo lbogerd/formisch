@@ -96,7 +96,6 @@ function defineFrameworkConfig(
       'react',
       'solid-js',
       'svelte',
-      'valibot',
       'vue',
     ],
     clean: true,

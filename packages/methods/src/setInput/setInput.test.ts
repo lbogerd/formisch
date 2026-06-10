@@ -1,11 +1,12 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { setInput } from './setInput.ts';
 
 describe('setInput', () => {
   test('should set field input value', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore<{ name: string | undefined }>({
+      initialInput: { name: undefined },
+    });
 
     setInput(store, { path: ['name'], input: 'John' });
 
@@ -13,7 +14,7 @@ describe('setInput', () => {
   });
 
   test('should mark field as dirty when value changes', () => {
-    const store = createTestStore(v.object({ name: v.string() }), {
+    const store = createTestStore({
       initialInput: { name: 'John' },
     });
 
@@ -23,7 +24,7 @@ describe('setInput', () => {
   });
 
   test('should not mark field dirty when value same as initial', () => {
-    const store = createTestStore(v.object({ name: v.string() }), {
+    const store = createTestStore({
       initialInput: { name: 'John' },
     });
 
@@ -33,10 +34,7 @@ describe('setInput', () => {
   });
 
   test('should set nested field input', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: '' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { email: '' } } });
 
     setInput(store, { path: ['user', 'email'], input: 'test@example.com' });
 
@@ -48,7 +46,7 @@ describe('setInput', () => {
   });
 
   test('should set array item input', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b'] },
     });
 
@@ -62,12 +60,9 @@ describe('setInput', () => {
   });
 
   test('should set full form input', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), age: v.number() }),
-      {
-        initialInput: { name: 'John', age: 30 },
-      }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', age: 30 },
+    });
 
     setInput(store, { input: { name: 'Jane', age: 25 } });
 
@@ -76,13 +71,15 @@ describe('setInput', () => {
   });
 
   test('should trigger validation when validate option is set', () => {
-    const store = createTestStore(v.object({ name: v.string() }), {
+    const store = createTestStore<{ name: string | undefined }>({
+      initialInput: { name: undefined },
       validate: 'input',
     });
 
     setInput(store, { path: ['name'], input: 'John' });
 
-    // Check that validators count increased, indicating validation was triggered
-    expect(store.validators).toBe(1);
+    // Check that the schema's validate function was called, indicating
+    // validation was triggered
+    expect(store.schema['~standard'].validate).toHaveBeenCalledOnce();
   });
 });

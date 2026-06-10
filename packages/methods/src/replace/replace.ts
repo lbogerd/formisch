@@ -10,11 +10,11 @@ import {
   type PathValue,
   type RequiredPath,
   resetItemState,
+  type StandardSchemaV1,
   untrack,
   type ValidArrayPath,
   validateIfRequired,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Replace array field config interface.
@@ -26,19 +26,26 @@ export interface ReplaceConfig<
   /**
    * The path to the field array to replace an item within.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The index of the item to replace.
    */
   readonly at: number;
   /**
    * The partial initial input value for the replacement item.
+   *
+   * Hint: The field structure of the new item is derived from this value, so
+   * it is required.
    */
-  readonly initialInput?:
-    | DeepPartial<
-        PathValue<v.InferInput<TSchema>, [...TFieldArrayPath, number]>
-      >
-    | undefined;
+  readonly initialInput: DeepPartial<
+    PathValue<
+      StandardSchemaV1.InferInput<TSchema>,
+      [...TFieldArrayPath, number]
+    >
+  >;
 }
 
 /**
@@ -58,7 +65,8 @@ export function replace<
   const internalFormStore = form[INTERNAL];
   const internalArrayStore = getFieldStore(
     internalFormStore,
-    config.path
+    config.path,
+    'array'
   ) as InternalArrayStore;
 
   // Get current items of field array

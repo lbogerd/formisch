@@ -1,13 +1,32 @@
-import * as v from 'valibot';
+import type {
+  BaseFormStore,
+  InternalFormStore,
+  StandardSchemaV1,
+} from '@formisch/core';
 import { describe, expect, test } from 'vitest';
 import { createTestStore, initializeChildSlot } from '../vitest/index.ts';
 import { insert } from './insert.ts';
 
+/**
+ * Creates a test store with a mock schema typed to the given input shape so
+ * that field paths and initial inputs are type checked.
+ *
+ * @param initialInput The initial input of the form.
+ *
+ * @returns A form store for testing with access to internal state.
+ */
+function createTypedTestStore<TInput extends Record<string, unknown>>(
+  initialInput?: TInput
+): BaseFormStore<StandardSchemaV1<TInput>> & InternalFormStore {
+  return createTestStore({ initialInput }) as BaseFormStore<
+    StandardSchemaV1<TInput>
+  > &
+    InternalFormStore;
+}
+
 describe('insert', () => {
   test('should insert item at end of array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b'] });
 
     insert(store, { path: ['items'], initialInput: 'c' });
 
@@ -20,9 +39,7 @@ describe('insert', () => {
   });
 
   test('should insert item at specific index and shift children', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b'] });
 
     const itemsStore = store.children.items;
     expect(itemsStore.kind).toBe('array');
@@ -37,9 +54,7 @@ describe('insert', () => {
   });
 
   test('should insert at middle index without a preinitialized target slot', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     const itemsStore = store.children.items;
     expect(itemsStore.kind).toBe('array');
@@ -55,9 +70,7 @@ describe('insert', () => {
   });
 
   test('should reset existing child when inserting at occupied index', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b'] });
 
     const itemsStore = store.children.items;
     expect(itemsStore.kind).toBe('array');
@@ -80,9 +93,7 @@ describe('insert', () => {
   });
 
   test('should mark array as dirty after insert', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a'] },
-    });
+    const store = createTypedTestStore({ items: ['a'] });
 
     insert(store, { path: ['items'], initialInput: 'b' });
 
@@ -90,10 +101,7 @@ describe('insert', () => {
   });
 
   test('should insert object item', () => {
-    const store = createTestStore(
-      v.object({ users: v.array(v.object({ name: v.string() })) }),
-      { initialInput: { users: [{ name: 'John' }] } }
-    );
+    const store = createTypedTestStore({ users: [{ name: 'John' }] });
 
     insert(store, { path: ['users'], initialInput: { name: 'Jane' } });
 
@@ -110,26 +118,12 @@ describe('insert', () => {
   });
 
   test('should insert object item in the middle without a preinitialized target slot', () => {
-    const store = createTestStore(
-      v.object({
-        runs: v.array(
-          v.object({
-            name: v.string(),
-            config: v.object({
-              windowSize: v.number(),
-            }),
-          })
-        ),
-      }),
-      {
-        initialInput: {
-          runs: [
-            { name: 'Run 1', config: { windowSize: 1 } },
-            { name: 'Run 2', config: { windowSize: 2 } },
-          ],
-        },
-      }
-    );
+    const store = createTypedTestStore({
+      runs: [
+        { name: 'Run 1', config: { windowSize: 1 } },
+        { name: 'Run 2', config: { windowSize: 2 } },
+      ],
+    });
 
     insert(store, {
       path: ['runs'],
@@ -162,9 +156,7 @@ describe('insert', () => {
   });
 
   test('should insert into empty array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: [] },
-    });
+    const store = createTypedTestStore({ items: [] as string[] });
 
     insert(store, { path: ['items'], initialInput: 'first' });
 
@@ -176,11 +168,46 @@ describe('insert', () => {
     }
   });
 
+  test('should lazily create array store when inserting into absent path', () => {
+    const store = createTypedTestStore<{ items?: string[] }>({});
+
+    insert(store, { path: ['items'], initialInput: 'first' });
+
+    const itemsStore = store.children.items;
+    expect(itemsStore.kind).toBe('array');
+    if (itemsStore.kind === 'array') {
+      expect(itemsStore.items.value).toHaveLength(1);
+      expect(itemsStore.children[0].input.value).toBe('first');
+      expect(itemsStore.input.value).toBe(true);
+    }
+  });
+
+  test('should build child structure from object initial input in lazily created array', () => {
+    const store = createTypedTestStore<{
+      users?: { name: string; email: string }[];
+    }>({});
+
+    insert(store, {
+      path: ['users'],
+      initialInput: { name: 'Jane', email: 'jane@example.com' },
+    });
+
+    const usersStore = store.children.users;
+    expect(usersStore.kind).toBe('array');
+    if (usersStore.kind === 'array') {
+      expect(usersStore.items.value).toHaveLength(1);
+      const firstUser = usersStore.children[0];
+      expect(firstUser.kind).toBe('object');
+      if (firstUser.kind === 'object') {
+        expect(Object.keys(firstUser.children)).toEqual(['name', 'email']);
+        expect(firstUser.children.name.input.value).toBe('Jane');
+        expect(firstUser.children.email.input.value).toBe('jane@example.com');
+      }
+    }
+  });
+
   test('should insert into nested array', () => {
-    const store = createTestStore(
-      v.object({ outer: v.object({ items: v.array(v.string()) }) }),
-      { initialInput: { outer: { items: ['x'] } } }
-    );
+    const store = createTypedTestStore({ outer: { items: ['x'] } });
 
     insert(store, { path: ['outer', 'items'], initialInput: 'y' });
 

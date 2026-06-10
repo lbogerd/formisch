@@ -1,11 +1,10 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { getAllErrors } from './getAllErrors.ts';
 
 describe('getAllErrors', () => {
   test('should return null when no errors', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
 
     const result = getAllErrors(store);
 
@@ -13,7 +12,7 @@ describe('getAllErrors', () => {
   });
 
   test('should return field errors as flat array', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.errors.value = ['Name is required'];
 
     const result = getAllErrors(store);
@@ -22,10 +21,7 @@ describe('getAllErrors', () => {
   });
 
   test('should return nested field errors', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: '' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { email: '' } } });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -38,7 +34,7 @@ describe('getAllErrors', () => {
   });
 
   test('should return array item errors', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b'] },
     });
     const itemsStore = store.children.items;
@@ -54,7 +50,7 @@ describe('getAllErrors', () => {
   });
 
   test('should return multiple errors for same field', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.errors.value = ['Too short', 'Invalid format'];
 
     const result = getAllErrors(store);
@@ -63,9 +59,9 @@ describe('getAllErrors', () => {
   });
 
   test('should combine errors from multiple fields', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string() })
-    );
+    const store = createTestStore({
+      initialInput: { name: undefined, email: undefined },
+    });
     store.children.name.errors.value = ['Name error'];
     store.children.email.errors.value = ['Email error'];
 

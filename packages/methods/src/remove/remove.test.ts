@@ -1,13 +1,32 @@
-import * as v from 'valibot';
+import type {
+  BaseFormStore,
+  InternalFormStore,
+  StandardSchemaV1,
+} from '@formisch/core';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { remove } from './remove.ts';
 
+/**
+ * Creates a test store with a mock schema typed to the given input shape so
+ * that field paths and initial inputs are type checked.
+ *
+ * @param initialInput The initial input of the form.
+ *
+ * @returns A form store for testing with access to internal state.
+ */
+function createTypedTestStore<TInput extends Record<string, unknown>>(
+  initialInput?: TInput
+): BaseFormStore<StandardSchemaV1<TInput>> & InternalFormStore {
+  return createTestStore({ initialInput }) as BaseFormStore<
+    StandardSchemaV1<TInput>
+  > &
+    InternalFormStore;
+}
+
 describe('remove', () => {
   test('should remove item from array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     remove(store, { path: ['items'], at: 1 });
 
@@ -23,9 +42,7 @@ describe('remove', () => {
   });
 
   test('should remove first item from array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     remove(store, { path: ['items'], at: 0 });
 
@@ -39,9 +56,7 @@ describe('remove', () => {
   });
 
   test('should remove last item from array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     remove(store, { path: ['items'], at: 2 });
 
@@ -55,9 +70,7 @@ describe('remove', () => {
   });
 
   test('should mark array as dirty after removal', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     remove(store, { path: ['items'], at: 1 });
 
@@ -65,10 +78,7 @@ describe('remove', () => {
   });
 
   test('should remove item from nested array', () => {
-    const store = createTestStore(
-      v.object({ outer: v.object({ items: v.array(v.string()) }) }),
-      { initialInput: { outer: { items: ['x', 'y'] } } }
-    );
+    const store = createTypedTestStore({ outer: { items: ['x', 'y'] } });
 
     remove(store, { path: ['outer', 'items'], at: 0 });
 

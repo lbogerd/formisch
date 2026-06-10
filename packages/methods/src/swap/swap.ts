@@ -6,12 +6,12 @@ import {
   INTERNAL,
   type InternalArrayStore,
   type RequiredPath,
+  type StandardSchemaV1,
   swapItemState,
   untrack,
   type ValidArrayPath,
   validateIfRequired,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Swap array field config interface.
@@ -23,7 +23,10 @@ export interface SwapConfig<
   /**
    * The path to the field array to swap items within.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The index of the first item to swap.
    */
@@ -51,7 +54,8 @@ export function swap<
   const internalFormStore = form[INTERNAL];
   const internalArrayStore = getFieldStore(
     internalFormStore,
-    config.path
+    config.path,
+    'array'
   ) as InternalArrayStore;
 
   // Get current items of field array

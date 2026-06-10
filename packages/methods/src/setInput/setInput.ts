@@ -7,10 +7,10 @@ import {
   type PathValue,
   type RequiredPath,
   setFieldInput,
+  type StandardSchemaV1,
   validateIfRequired,
   type ValidPath,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Set form input config interface.
@@ -23,7 +23,7 @@ export interface SetFormInputConfig<TSchema extends FormSchema> {
   /**
    * The input value to set for the form.
    */
-  readonly input: v.InferInput<TSchema>;
+  readonly input: StandardSchemaV1.InferInput<TSchema>;
 }
 
 /**
@@ -36,11 +36,11 @@ export interface SetFieldInputConfig<
   /**
    * The path to the field to set input on.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
   /**
    * The input value to set for the field.
    */
-  readonly input: PathValue<v.InferInput<TSchema>, TFieldPath>;
+  readonly input: PathValue<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
 }
 
 /**

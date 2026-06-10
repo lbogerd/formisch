@@ -9,11 +9,11 @@ import {
   type InternalArrayStore,
   type InternalFieldStore,
   type RequiredPath,
+  type StandardSchemaV1,
   untrack,
   type ValidArrayPath,
   validateIfRequired,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Move array field config interface.
@@ -25,7 +25,10 @@ export interface MoveConfig<
   /**
    * The path to the field array to move an item within.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The index of the item to move from.
    */
@@ -54,7 +57,8 @@ export function move<
   const internalFormStore = form[INTERNAL];
   const internalArrayStore = getFieldStore(
     internalFormStore,
-    config.path
+    config.path,
+    'array'
   ) as InternalArrayStore;
 
   // Get current items of field array
@@ -76,13 +80,7 @@ export function move<
 
       // Create temporary internal field store
       const tempInternalFieldStore = {} as InternalFieldStore;
-      initializeFieldStore(
-        tempInternalFieldStore,
-        // @ts-expect-error
-        internalArrayStore.schema.item,
-        undefined,
-        []
-      );
+      initializeFieldStore(tempInternalFieldStore, undefined, []);
 
       // Copy item state that gets overwritten to temporary store
       copyItemState(

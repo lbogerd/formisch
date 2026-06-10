@@ -1,14 +1,10 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { pickDirty } from './pickDirty.ts';
 
 describe('pickDirty', () => {
   test('should return undefined for a clean form', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), age: v.number() }),
-      { initialInput: { name: 'John', age: 25 } }
-    );
+    const store = createTestStore({ initialInput: { name: 'John', age: 25 } });
 
     expect(
       pickDirty(store, { from: { name: 'John', age: 25 } })
@@ -16,10 +12,9 @@ describe('pickDirty', () => {
   });
 
   test('should return only the dirty key from a flat object', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string() }),
-      { initialInput: { name: 'John', email: 'a@example.com' } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', email: 'a@example.com' },
+    });
     store.children.email.input.value = 'b@example.com';
     store.children.email.isDirty.value = true;
 
@@ -31,7 +26,7 @@ describe('pickDirty', () => {
   });
 
   test('should pull values from the supplied value, not the form', () => {
-    const store = createTestStore(v.object({ age: v.string() }), {
+    const store = createTestStore({
       initialInput: { age: '25' },
     });
     store.children.age.input.value = '30';
@@ -43,7 +38,7 @@ describe('pickDirty', () => {
   });
 
   test('should return the full current array when any item is dirty', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b', 'c'] },
     });
     const itemsStore = store.children.items;
@@ -59,10 +54,9 @@ describe('pickDirty', () => {
   });
 
   test('should include dirty leaves under a clean object parent', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string(), name: v.string() }) }),
-      { initialInput: { user: { email: 'a@example.com', name: 'John' } } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: 'a@example.com', name: 'John' } },
+    });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -78,7 +72,7 @@ describe('pickDirty', () => {
   });
 
   test('should include a dirty leaf whose value is undefined', () => {
-    const store = createTestStore(v.object({ name: v.optional(v.string()) }), {
+    const store = createTestStore({
       initialInput: { name: 'John' },
     });
     store.children.name.input.value = undefined;
@@ -90,10 +84,7 @@ describe('pickDirty', () => {
   });
 
   test('should pass through the supplied value when an object was cleared to null', () => {
-    const store = createTestStore(
-      v.object({ user: v.nullish(v.object({ name: v.string() })) }),
-      { initialInput: { user: { name: 'John' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { name: 'John' } } });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -107,10 +98,9 @@ describe('pickDirty', () => {
   });
 
   test('should skip a dirty key that is absent from the supplied value', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string() }),
-      { initialInput: { name: 'John', email: 'a@example.com' } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', email: 'a@example.com' },
+    });
     store.children.name.input.value = 'Jane';
     store.children.name.isDirty.value = true;
     store.children.email.input.value = 'b@example.com';
@@ -124,13 +114,9 @@ describe('pickDirty', () => {
   });
 
   test('should pass a diverging value through without throwing when an object is expected', () => {
-    const store = createTestStore(
-      v.object({
-        name: v.string(),
-        user: v.object({ email: v.string() }),
-      }),
-      { initialInput: { name: 'John', user: { email: 'a@example.com' } } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', user: { email: 'a@example.com' } },
+    });
     store.children.name.input.value = 'Jane';
     store.children.name.isDirty.value = true;
     const userStore = store.children.user;
@@ -154,10 +140,9 @@ describe('pickDirty', () => {
   });
 
   test('should return undefined when all dirty keys are absent from the supplied value', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string() }),
-      { initialInput: { name: 'John', email: 'a@example.com' } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', email: 'a@example.com' },
+    });
     store.children.email.input.value = 'b@example.com';
     store.children.email.isDirty.value = true;
 
@@ -167,10 +152,9 @@ describe('pickDirty', () => {
   });
 
   test('should keep an empty object for a nested object whose dirty key is absent', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string(), name: v.string() }) }),
-      { initialInput: { user: { email: 'a@example.com', name: 'John' } } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: 'a@example.com', name: 'John' } },
+    });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -186,10 +170,9 @@ describe('pickDirty', () => {
   });
 
   test('should return the full array atomically when a nested item field is dirty', () => {
-    const store = createTestStore(
-      v.object({ users: v.array(v.object({ name: v.string() })) }),
-      { initialInput: { users: [{ name: 'John' }, { name: 'Jane' }] } }
-    );
+    const store = createTestStore({
+      initialInput: { users: [{ name: 'John' }, { name: 'Jane' }] },
+    });
     const usersStore = store.children.users;
     expect(usersStore.kind).toBe('array');
     if (usersStore.kind === 'array') {
@@ -210,10 +193,7 @@ describe('pickDirty', () => {
   });
 
   test('should pass through an array that was cleared to nullish', () => {
-    const store = createTestStore(
-      v.object({ tags: v.nullish(v.array(v.string())) }),
-      { initialInput: { tags: ['a', 'b'] } }
-    );
+    const store = createTestStore({ initialInput: { tags: ['a', 'b'] } });
     const tagsStore = store.children.tags;
     expect(tagsStore.kind).toBe('array');
     if (tagsStore.kind === 'array') {

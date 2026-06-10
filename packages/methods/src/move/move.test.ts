@@ -1,13 +1,32 @@
-import * as v from 'valibot';
+import type {
+  BaseFormStore,
+  InternalFormStore,
+  StandardSchemaV1,
+} from '@formisch/core';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { move } from './move.ts';
 
+/**
+ * Creates a test store with a mock schema typed to the given input shape so
+ * that field paths and initial inputs are type checked.
+ *
+ * @param initialInput The initial input of the form.
+ *
+ * @returns A form store for testing with access to internal state.
+ */
+function createTypedTestStore<TInput extends Record<string, unknown>>(
+  initialInput?: TInput
+): BaseFormStore<StandardSchemaV1<TInput>> & InternalFormStore {
+  return createTestStore({ initialInput }) as BaseFormStore<
+    StandardSchemaV1<TInput>
+  > &
+    InternalFormStore;
+}
+
 describe('move', () => {
   test('should move item forward in array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     move(store, { path: ['items'], from: 0, to: 2 });
 
@@ -21,9 +40,7 @@ describe('move', () => {
   });
 
   test('should move item backward in array', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     move(store, { path: ['items'], from: 2, to: 0 });
 
@@ -37,9 +54,7 @@ describe('move', () => {
   });
 
   test('should not change array when from equals to', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b', 'c'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b', 'c'] });
 
     move(store, { path: ['items'], from: 1, to: 1 });
 
@@ -53,9 +68,7 @@ describe('move', () => {
   });
 
   test('should mark array as touched after move', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b'] });
 
     move(store, { path: ['items'], from: 0, to: 1 });
 
@@ -63,9 +76,7 @@ describe('move', () => {
   });
 
   test('should mark array as dirty after move', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
-      initialInput: { items: ['a', 'b'] },
-    });
+    const store = createTypedTestStore({ items: ['a', 'b'] });
 
     move(store, { path: ['items'], from: 0, to: 1 });
 
@@ -73,10 +84,9 @@ describe('move', () => {
   });
 
   test('should move object items correctly', () => {
-    const store = createTestStore(
-      v.object({ users: v.array(v.object({ name: v.string() })) }),
-      { initialInput: { users: [{ name: 'A' }, { name: 'B' }, { name: 'C' }] } }
-    );
+    const store = createTypedTestStore({
+      users: [{ name: 'A' }, { name: 'B' }, { name: 'C' }],
+    });
 
     move(store, { path: ['users'], from: 0, to: 2 });
 
@@ -95,10 +105,7 @@ describe('move', () => {
   });
 
   test('should move in nested array', () => {
-    const store = createTestStore(
-      v.object({ data: v.object({ tags: v.array(v.string()) }) }),
-      { initialInput: { data: { tags: ['x', 'y', 'z'] } } }
-    );
+    const store = createTypedTestStore({ data: { tags: ['x', 'y', 'z'] } });
 
     move(store, { path: ['data', 'tags'], from: 2, to: 0 });
 

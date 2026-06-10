@@ -2,9 +2,9 @@ import {
   type BaseFormStore,
   type FormSchema,
   INTERNAL,
+  type StandardSchemaV1,
   validateFormInput,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Validate form config interface.
@@ -17,9 +17,9 @@ export interface ValidateFormConfig {
 }
 
 /**
- * Validates the entire form input against its schema. Returns a safe parse result
- * indicating success or failure with detailed issues. Optionally focuses the first
- * field with validation errors.
+ * Validates the entire form input against its schema. Returns a Standard
+ * Schema result indicating success (`value`) or failure (`issues`).
+ * Optionally focuses the first field with validation errors.
  *
  * @param form The form store to validate.
  * @param config The validate form configuration specifying focus behavior.
@@ -29,8 +29,8 @@ export interface ValidateFormConfig {
 export function validate<TSchema extends FormSchema>(
   form: BaseFormStore<TSchema>,
   config?: ValidateFormConfig
-): Promise<v.SafeParseResult<TSchema>> {
+): Promise<StandardSchemaV1.Result<StandardSchemaV1.InferOutput<TSchema>>> {
   return validateFormInput(form[INTERNAL], config) as Promise<
-    v.SafeParseResult<TSchema>
+    StandardSchemaV1.Result<StandardSchemaV1.InferOutput<TSchema>>
   >;
 }

@@ -4,9 +4,9 @@ import {
   getFieldStore,
   INTERNAL,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidPath,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Set form errors config interface.
@@ -32,7 +32,7 @@ export interface SetFieldErrorsConfig<
   /**
    * The path to the field to set errors on.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
   /**
    * The error messages to set, or null to clear errors.
    */

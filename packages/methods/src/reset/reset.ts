@@ -8,12 +8,12 @@ import {
   type PathValue,
   type RequiredPath,
   setInitialFieldInput,
+  type StandardSchemaV1,
   untrack,
   validateFormInput,
   type ValidPath,
   walkFieldStore,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Reset base config interface.
@@ -46,7 +46,9 @@ export interface ResetFormConfig<TSchema extends FormSchema>
    * The new initial input to reset to. If provided, replaces the form's
    * initial input.
    */
-  readonly initialInput?: DeepPartial<v.InferInput<TSchema>> | undefined;
+  readonly initialInput?:
+    | DeepPartial<StandardSchemaV1.InferInput<TSchema>>
+    | undefined;
   /**
    * Whether to keep the submitted state during reset. Defaults to false.
    */
@@ -63,13 +65,13 @@ export interface ResetFieldConfig<
   /**
    * The path to the field to reset.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
   /**
    * The new initial input to reset the field to. If provided, replaces the
    * field's initial input.
    */
   readonly initialInput?:
-    | DeepPartial<PathValue<v.InferInput<TSchema>, TFieldPath>>
+    | DeepPartial<PathValue<StandardSchemaV1.InferInput<TSchema>, TFieldPath>>
     | undefined;
 }
 

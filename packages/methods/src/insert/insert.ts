@@ -5,6 +5,7 @@ import {
   createId,
   type DeepPartial,
   type FormSchema,
+  getFieldStore,
   initializeFieldStore,
   INTERNAL,
   type InternalArrayStore,
@@ -13,11 +14,11 @@ import {
   type PathValue,
   type RequiredPath,
   resetItemState,
+  type StandardSchemaV1,
   untrack,
   type ValidArrayPath,
   validateIfRequired,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Insert array field config interface.
@@ -29,19 +30,26 @@ export interface InsertConfig<
   /**
    * The path to the field array to insert into.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The index to insert the new item at. If undefined, appends to the end.
    */
   readonly at?: number | undefined;
   /**
    * The partial initial input value for the new item.
+   *
+   * Hint: The field structure of the new item is derived from this value, so
+   * it is required.
    */
-  readonly initialInput?:
-    | DeepPartial<
-        PathValue<v.InferInput<TSchema>, [...TFieldArrayPath, number]>
-      >
-    | undefined;
+  readonly initialInput: DeepPartial<
+    PathValue<
+      StandardSchemaV1.InferInput<TSchema>,
+      [...TFieldArrayPath, number]
+    >
+  >;
 }
 
 /**
@@ -61,18 +69,20 @@ export function insert<
   // Get internal form store
   const internalFormStore = form[INTERNAL];
 
-  // Walk path to get internal field store and mark all parents as having input
+  // Get internal array store, lazily creating missing field stores
+  const internalArrayStore = getFieldStore(
+    internalFormStore,
+    config.path,
+    'array'
+  ) as InternalArrayStore;
+
+  // Walk path to mark all parents as having input
   let internalFieldStore: InternalFieldStore = internalFormStore;
-  for (let index = 0; index < config.path.length; index++) {
+  for (let index = 0; index < config.path.length - 1; index++) {
     // @ts-expect-error
     internalFieldStore = internalFieldStore.children[config.path[index]];
-    if (index < config.path.length - 1) {
-      internalFieldStore.input.value = true;
-    }
+    internalFieldStore.input.value = true;
   }
-
-  // Last internal field store of path is array store
-  const internalArrayStore = internalFieldStore as InternalArrayStore;
 
   // Get current items of field array
   const items = untrack(() => internalArrayStore.items.value);
@@ -97,8 +107,6 @@ export function insert<
           path.push(index);
           initializeFieldStore(
             internalArrayStore.children[index],
-            // @ts-expect-error
-            internalArrayStore.schema.item,
             undefined,
             path
           );
@@ -116,8 +124,6 @@ export function insert<
         path.push(insertIndex);
         initializeFieldStore(
           internalArrayStore.children[insertIndex],
-          // @ts-expect-error
-          internalArrayStore.schema.item,
           config.initialInput,
           path
         );

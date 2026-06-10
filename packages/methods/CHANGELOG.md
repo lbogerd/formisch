@@ -2,6 +2,15 @@
 
 All notable changes to the library will be documented in this file.
 
+## vX.X.X (Month DD, YYYY)
+
+- Change library to support any [Standard Schema](https://standardschema.dev) library instead of Valibot only; `valibot` is no longer a peer dependency (**breaking**)
+- Change `validate` to return a `StandardSchemaV1.Result`; check `result.issues` instead of `result.success` and read `result.value` instead of `result.output` (**breaking**)
+- Change `handleSubmit` to pass the Standard Schema output (`result.value`) to the submit handler (**breaking**)
+- Change `initialInput` of `InsertConfig` and `ReplaceConfig` to be required, as the field structure of new items is derived from it (**breaking**)
+- Change path types of all methods to use `StandardSchemaV1.InferInput` instead of `v.InferInput` (**breaking**)
+- Change `insert`, `move`, `remove`, `replace` and `swap` to lazily create and upgrade field stores for array paths missing from the initial input
+
 ## v0.8.0 (May 24, 2026)
 
 - Add `pickDirty` method to filter an externally-supplied value down to its dirty parts using the form's dirty mask (issue #21, pull request #98)

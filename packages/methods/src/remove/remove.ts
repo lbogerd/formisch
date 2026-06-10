@@ -7,11 +7,11 @@ import {
   INTERNAL,
   type InternalArrayStore,
   type RequiredPath,
+  type StandardSchemaV1,
   untrack,
   type ValidArrayPath,
   validateIfRequired,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Remove array field config interface.
@@ -23,7 +23,10 @@ export interface RemoveConfig<
   /**
    * The path to the field array to remove an item from.
    */
-  readonly path: ValidArrayPath<v.InferInput<TSchema>, TFieldArrayPath>;
+  readonly path: ValidArrayPath<
+    StandardSchemaV1.InferInput<TSchema>,
+    TFieldArrayPath
+  >;
   /**
    * The index of the item to remove.
    */
@@ -48,7 +51,8 @@ export function remove<
   const internalFormStore = form[INTERNAL];
   const internalArrayStore = getFieldStore(
     internalFormStore,
-    config.path
+    config.path,
+    'array'
   ) as InternalArrayStore;
 
   // Get current items of field array

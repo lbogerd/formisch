@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
-import * as v from 'valibot';
 import { describe, expect, test, vi } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { focus } from './focus.ts';
 
 describe('focus', () => {
   test('should focus first element of field', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     const input = document.createElement('input');
     const focusSpy = vi.spyOn(input, 'focus');
     store.children.name.elements = [input];
@@ -17,14 +16,14 @@ describe('focus', () => {
   });
 
   test('should not throw if field has no elements', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.elements = [];
 
     expect(() => focus(store, { path: ['name'] })).not.toThrow();
   });
 
   test('should focus first element when field has multiple elements', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     const input1 = document.createElement('input');
     const input2 = document.createElement('input');
     const focusSpy1 = vi.spyOn(input1, 'focus');
@@ -38,10 +37,9 @@ describe('focus', () => {
   });
 
   test('should focus nested field', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: '' } } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: '' } },
+    });
     const input = document.createElement('input');
     const focusSpy = vi.spyOn(input, 'focus');
 

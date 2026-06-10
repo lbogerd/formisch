@@ -1,11 +1,10 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { getErrors } from './getErrors.ts';
 
 describe('getErrors', () => {
   test('should return form-level errors when no path provided', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.errors.value = ['Form error 1', 'Form error 2'];
 
     const result = getErrors(store);
@@ -14,7 +13,7 @@ describe('getErrors', () => {
   });
 
   test('should return null when form has no errors', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.errors.value = null;
 
     const result = getErrors(store);
@@ -23,7 +22,7 @@ describe('getErrors', () => {
   });
 
   test('should return field-level errors', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.errors.value = ['Name is required'];
 
     const result = getErrors(store, { path: ['name'] });
@@ -32,7 +31,7 @@ describe('getErrors', () => {
   });
 
   test('should return null when field has no errors', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.errors.value = null;
 
     const result = getErrors(store, { path: ['name'] });
@@ -41,10 +40,7 @@ describe('getErrors', () => {
   });
 
   test('should return nested field errors', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: '' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { email: '' } } });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -57,7 +53,7 @@ describe('getErrors', () => {
   });
 
   test('should return array item errors', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a'] },
     });
     const itemsStore = store.children.items;

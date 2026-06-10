@@ -8,9 +8,9 @@ import {
   type InternalFieldStore,
   type PathKey,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidPath,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Get form dirty paths config interface.
@@ -32,7 +32,7 @@ export interface GetFieldDirtyPathsConfig<
   /**
    * The path to the field to inspect.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
 }
 
 /**
@@ -47,7 +47,7 @@ export interface GetFieldDirtyPathsConfig<
  */
 export function getDirtyPaths<TSchema extends FormSchema>(
   form: BaseFormStore<TSchema>
-): DirtyPath<v.InferInput<TSchema>>[];
+): DirtyPath<StandardSchemaV1.InferInput<TSchema>>[];
 
 /**
  * Returns a list of paths to the dirty fields of a specific field or the
@@ -68,7 +68,7 @@ export function getDirtyPaths<
   config: TFieldPath extends RequiredPath
     ? GetFieldDirtyPathsConfig<TSchema, TFieldPath>
     : GetFormDirtyPathsConfig
-): DirtyPath<v.InferInput<TSchema>>[];
+): DirtyPath<StandardSchemaV1.InferInput<TSchema>>[];
 
 // @__NO_SIDE_EFFECTS__
 export function getDirtyPaths(

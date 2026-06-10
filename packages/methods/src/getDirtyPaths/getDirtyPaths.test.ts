@@ -1,23 +1,19 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
+import { setInput } from '../setInput/setInput.ts';
 import { createTestStore } from '../vitest/index.ts';
 import { getDirtyPaths } from './getDirtyPaths.ts';
 
 describe('getDirtyPaths', () => {
   test('should return empty array for a clean form', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), age: v.number() }),
-      { initialInput: { name: 'John', age: 25 } }
-    );
+    const store = createTestStore({ initialInput: { name: 'John', age: 25 } });
 
     expect(getDirtyPaths(store)).toStrictEqual([]);
   });
 
   test('should return path to a dirty top-level value', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string() }),
-      { initialInput: { name: 'John', email: 'a@example.com' } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', email: 'a@example.com' },
+    });
     store.children.email.input.value = 'b@example.com';
     store.children.email.isDirty.value = true;
 
@@ -25,10 +21,9 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return paths to multiple dirty values', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), email: v.string(), age: v.number() }),
-      { initialInput: { name: 'John', email: 'a@example.com', age: 25 } }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', email: 'a@example.com', age: 25 },
+    });
     store.children.email.input.value = 'b@example.com';
     store.children.email.isDirty.value = true;
     store.children.age.input.value = 26;
@@ -38,10 +33,9 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return path to a nested dirty value', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string(), name: v.string() }) }),
-      { initialInput: { user: { email: 'a@example.com', name: 'John' } } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: 'a@example.com', name: 'John' } },
+    });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -53,7 +47,7 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return the array path when any item is dirty', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b', 'c'] },
     });
     const itemsStore = store.children.items;
@@ -67,19 +61,14 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return only the array path when a nested object field inside an array is dirty', () => {
-    const store = createTestStore(
-      v.object({
-        users: v.array(v.object({ name: v.string(), age: v.number() })),
-      }),
-      {
-        initialInput: {
-          users: [
-            { name: 'John', age: 25 },
-            { name: 'Jane', age: 30 },
-          ],
-        },
-      }
-    );
+    const store = createTestStore({
+      initialInput: {
+        users: [
+          { name: 'John', age: 25 },
+          { name: 'Jane', age: 30 },
+        ],
+      },
+    });
     const usersStore = store.children.users;
     expect(usersStore.kind).toBe('array');
     if (usersStore.kind === 'array') {
@@ -95,10 +84,7 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return the object path when an object was cleared to null', () => {
-    const store = createTestStore(
-      v.object({ user: v.nullish(v.object({ name: v.string() })) }),
-      { initialInput: { user: { name: 'John' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { name: 'John' } } });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -110,37 +96,24 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return the object path when an object transitioned from nullish without a dirty descendant', () => {
-    const store = createTestStore(
-      v.object({ user: v.nullish(v.object({ name: v.string() })) }),
-      { initialInput: { user: null } }
-    );
-    const userStore = store.children.user;
-    expect(userStore.kind).toBe('object');
-    if (userStore.kind === 'object') {
-      // Simulate `setInput(form, { path: ['user'], input: {} })`: the object's
-      // own dirty flag flips, but the child `name` stays at its initial value.
-      userStore.input.value = true;
-      userStore.isDirty.value = true;
-    }
+    const store = createTestStore<{ user: { name?: string } | null }>({
+      initialInput: { user: null },
+    });
+
+    // Setting an object input upgrades the nullish value field to an object
+    // field whose own dirty flag flips, without any dirty descendant.
+    setInput(store, { path: ['user'], input: {} });
 
     expect(getDirtyPaths(store)).toStrictEqual([['user']]);
   });
 
   test('should emit only the leaf path when both the object and a descendant are dirty', () => {
-    const store = createTestStore(
-      v.object({ user: v.nullish(v.object({ name: v.string() })) }),
-      { initialInput: { user: null } }
-    );
-    const userStore = store.children.user;
-    expect(userStore.kind).toBe('object');
-    if (userStore.kind === 'object') {
-      // Simulate `setInput(form, { path: ['user'], input: { name: 'John' } })`:
-      // both the object itself (null → object) and the `name` child flip dirty.
-      userStore.input.value = true;
-      userStore.isDirty.value = true;
-      userStore.children.name.input.value = 'John';
-      userStore.children.name.isDirty.value = true;
-    }
+    const store = createTestStore<{ user: { name?: string } | null }>({
+      initialInput: { user: null },
+    });
+
+    // Both the object itself (null → object) and the `name` child flip dirty.
+    setInput(store, { path: ['user'], input: { name: 'John' } });
 
     // Only the leaf path is emitted — the parent's dirty state is implied by
     // the descendant path and should not double-emit.
@@ -148,18 +121,12 @@ describe('getDirtyPaths', () => {
   });
 
   test('should scope to the given path', () => {
-    const store = createTestStore(
-      v.object({
-        user: v.object({ email: v.string(), name: v.string() }),
-        meta: v.object({ visits: v.number() }),
-      }),
-      {
-        initialInput: {
-          user: { email: 'a@example.com', name: 'John' },
-          meta: { visits: 0 },
-        },
-      }
-    );
+    const store = createTestStore({
+      initialInput: {
+        user: { email: 'a@example.com', name: 'John' },
+        meta: { visits: 0 },
+      },
+    });
     const userStore = store.children.user;
     expect(userStore.kind).toBe('object');
     if (userStore.kind === 'object') {
@@ -179,13 +146,9 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return empty array when scoped to a clean subtree', () => {
-    const store = createTestStore(
-      v.object({
-        user: v.object({ email: v.string() }),
-        other: v.string(),
-      }),
-      { initialInput: { user: { email: 'a@example.com' }, other: 'x' } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: 'a@example.com' }, other: 'x' },
+    });
     store.children.other.input.value = 'y';
     store.children.other.isDirty.value = true;
 
@@ -193,7 +156,7 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return the path when scoped to a dirty value field', () => {
-    const store = createTestStore(v.object({ name: v.string() }), {
+    const store = createTestStore({
       initialInput: { name: 'John' },
     });
     store.children.name.input.value = 'Jane';
@@ -203,7 +166,7 @@ describe('getDirtyPaths', () => {
   });
 
   test('should return the path when scoped to an array with a dirty item', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b', 'c'] },
     });
     const itemsStore = store.children.items;

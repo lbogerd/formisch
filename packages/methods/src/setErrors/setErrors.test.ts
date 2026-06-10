@@ -1,11 +1,10 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { setErrors } from './setErrors.ts';
 
 describe('setErrors', () => {
   test('should set form-level errors when no path provided', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
 
     setErrors(store, { errors: ['Form error 1', 'Form error 2'] });
 
@@ -13,7 +12,7 @@ describe('setErrors', () => {
   });
 
   test('should clear form-level errors with null', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.errors.value = ['Existing error'];
 
     setErrors(store, { errors: null });
@@ -22,7 +21,7 @@ describe('setErrors', () => {
   });
 
   test('should set field-level errors', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
 
     setErrors(store, { path: ['name'], errors: ['Name is required'] });
 
@@ -30,7 +29,7 @@ describe('setErrors', () => {
   });
 
   test('should clear field-level errors with null', () => {
-    const store = createTestStore(v.object({ name: v.string() }));
+    const store = createTestStore({ initialInput: { name: undefined } });
     store.children.name.errors.value = ['Existing error'];
 
     setErrors(store, { path: ['name'], errors: null });
@@ -39,10 +38,7 @@ describe('setErrors', () => {
   });
 
   test('should set nested field errors', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: '' } } }
-    );
+    const store = createTestStore({ initialInput: { user: { email: '' } } });
 
     setErrors(store, {
       path: ['user', 'email'],
@@ -59,7 +55,7 @@ describe('setErrors', () => {
   });
 
   test('should set array item errors', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a'] },
     });
 

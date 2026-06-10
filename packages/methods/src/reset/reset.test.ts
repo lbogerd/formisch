@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { reset } from './reset.ts';
@@ -7,7 +6,7 @@ import { reset } from './reset.ts';
 describe('reset', () => {
   describe('form reset', () => {
     test('should reset field input to initial value', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       store.children.name.input.value = 'Jane';
@@ -18,7 +17,7 @@ describe('reset', () => {
     });
 
     test('should reset field touched state', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.isTouched.value = true;
 
       reset(store);
@@ -27,7 +26,7 @@ describe('reset', () => {
     });
 
     test('should reset field errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.errors.value = ['Error'];
 
       reset(store);
@@ -36,7 +35,7 @@ describe('reset', () => {
     });
 
     test('should reset form submitted state', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.isSubmitted.value = true;
 
       reset(store);
@@ -45,7 +44,7 @@ describe('reset', () => {
     });
 
     test('should reset form errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.errors.value = ['Form error'];
 
       reset(store);
@@ -54,10 +53,9 @@ describe('reset', () => {
     });
 
     test('should reset nested object field', () => {
-      const store = createTestStore(
-        v.object({ user: v.object({ email: v.string() }) }),
-        { initialInput: { user: { email: 'test@example.com' } } }
-      );
+      const store = createTestStore({
+        initialInput: { user: { email: 'test@example.com' } },
+      });
       const userStore = store.children.user;
       expect(userStore.kind).toBe('object');
       if (userStore.kind === 'object') {
@@ -74,7 +72,7 @@ describe('reset', () => {
     });
 
     test('should reset array field', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+      const store = createTestStore({
         initialInput: { items: ['a', 'b'] },
       });
       const itemsStore = store.children.items;
@@ -93,7 +91,7 @@ describe('reset', () => {
     });
 
     test('should reset file input element', () => {
-      const store = createTestStore(v.object({ file: v.optional(v.any()) }));
+      const store = createTestStore({ initialInput: { file: undefined } });
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
       store.children.file.elements = [fileInput];
@@ -106,7 +104,7 @@ describe('reset', () => {
 
   describe('form reset with initialInput', () => {
     test('should reset to new initial input', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       store.children.name.input.value = 'Jane';
@@ -120,7 +118,7 @@ describe('reset', () => {
 
   describe('form reset with keepInput', () => {
     test('should keep current input values', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       store.children.name.input.value = 'Jane';
@@ -131,7 +129,7 @@ describe('reset', () => {
     });
 
     test('should still reset touched and errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.isTouched.value = true;
       store.children.name.errors.value = ['Error'];
 
@@ -144,7 +142,7 @@ describe('reset', () => {
 
   describe('form reset with keepTouched', () => {
     test('should keep touched state', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.isTouched.value = true;
 
       reset(store, { keepTouched: true });
@@ -155,7 +153,7 @@ describe('reset', () => {
 
   describe('form reset with keepErrors', () => {
     test('should keep field errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.errors.value = ['Error'];
 
       reset(store, { keepErrors: true });
@@ -164,7 +162,7 @@ describe('reset', () => {
     });
 
     test('should keep form errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.errors.value = ['Form error'];
 
       reset(store, { keepErrors: true });
@@ -175,7 +173,7 @@ describe('reset', () => {
 
   describe('form reset with keepSubmitted', () => {
     test('should keep submitted state', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.isSubmitted.value = true;
 
       reset(store, { keepSubmitted: true });
@@ -186,10 +184,9 @@ describe('reset', () => {
 
   describe('field reset', () => {
     test('should reset specific field', () => {
-      const store = createTestStore(
-        v.object({ name: v.string(), email: v.string() }),
-        { initialInput: { name: 'John', email: 'test@example.com' } }
-      );
+      const store = createTestStore({
+        initialInput: { name: 'John', email: 'test@example.com' },
+      });
       store.children.name.input.value = 'Jane';
       store.children.email.input.value = 'changed@example.com';
 
@@ -200,7 +197,7 @@ describe('reset', () => {
     });
 
     test('should reset specific field touched state', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.isTouched.value = true;
 
       reset(store, { path: ['name'] });
@@ -209,7 +206,7 @@ describe('reset', () => {
     });
 
     test('should reset specific field errors', () => {
-      const store = createTestStore(v.object({ name: v.string() }));
+      const store = createTestStore({ initialInput: { name: undefined } });
       store.children.name.errors.value = ['Error'];
 
       reset(store, { path: ['name'] });
@@ -220,7 +217,7 @@ describe('reset', () => {
 
   describe('field reset with initialInput', () => {
     test('should reset field to new initial input', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
 
@@ -231,7 +228,7 @@ describe('reset', () => {
     });
 
     test('should reset field to empty string initial input', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
 
@@ -242,7 +239,7 @@ describe('reset', () => {
     });
 
     test('should reset field to zero initial input', () => {
-      const store = createTestStore(v.object({ count: v.number() }), {
+      const store = createTestStore({
         initialInput: { count: 42 },
       });
 
@@ -253,7 +250,7 @@ describe('reset', () => {
     });
 
     test('should reset field to false initial input', () => {
-      const store = createTestStore(v.object({ flag: v.boolean() }), {
+      const store = createTestStore({
         initialInput: { flag: true },
       });
 
@@ -264,10 +261,9 @@ describe('reset', () => {
     });
 
     test('should reset field to null initial input', () => {
-      const store = createTestStore(
-        v.object({ name: v.nullable(v.string()) }),
-        { initialInput: { name: 'John' } }
-      );
+      const store = createTestStore<{ name: string | null }>({
+        initialInput: { name: 'John' },
+      });
 
       reset(store, { path: ['name'], initialInput: null });
 
@@ -276,7 +272,7 @@ describe('reset', () => {
     });
 
     test('should reset field to undefined when initialInput is explicitly undefined', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       store.children.name.input.value = 'Jane';
@@ -288,7 +284,7 @@ describe('reset', () => {
     });
 
     test('should keep existing initial input when initialInput key is omitted', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       store.children.name.input.value = 'Jane';
@@ -302,7 +298,7 @@ describe('reset', () => {
 
   describe('file input reset', () => {
     test('should reset file input elements', () => {
-      const store = createTestStore(v.object({ file: v.string() }), {
+      const store = createTestStore({
         initialInput: { file: '' },
       });
       const fileInput = document.createElement('input');
@@ -319,7 +315,7 @@ describe('reset', () => {
     });
 
     test('should reset only file type inputs', () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         initialInput: { name: 'John' },
       });
       const textInput = document.createElement('input');
@@ -338,7 +334,7 @@ describe('reset', () => {
 
   describe('validate on initial mode', () => {
     test('should validate form when validate mode is initial', async () => {
-      const store = createTestStore(v.object({ name: v.string() }), {
+      const store = createTestStore({
         validate: 'initial',
         initialInput: { name: 'John' },
       });
@@ -353,12 +349,9 @@ describe('reset', () => {
 
   describe('isDirty edge cases', () => {
     test('should mark dirty when startInput is null and input is not empty', () => {
-      const store = createTestStore(
-        v.object({ name: v.optional(v.string()) }),
-        {
-          initialInput: { name: undefined },
-        }
-      );
+      const store = createTestStore({
+        initialInput: { name: undefined },
+      });
       // Set start to undefined, current input to a value
       store.children.name.startInput.value = undefined;
       store.children.name.input.value = 'modified';
@@ -371,12 +364,9 @@ describe('reset', () => {
     });
 
     test('should not mark dirty when startInput is null and input is empty string', () => {
-      const store = createTestStore(
-        v.object({ name: v.optional(v.string()) }),
-        {
-          initialInput: { name: undefined },
-        }
-      );
+      const store = createTestStore({
+        initialInput: { name: undefined },
+      });
       // Set start to undefined, current input to empty string
       store.children.name.startInput.value = undefined;
       store.children.name.input.value = '';
@@ -391,7 +381,7 @@ describe('reset', () => {
 
   describe('array field reset', () => {
     test('should reset array items to initial state', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+      const store = createTestStore({
         initialInput: { items: ['a', 'b'] },
       });
       const itemsStore = store.children.items;
@@ -411,7 +401,7 @@ describe('reset', () => {
     });
 
     test('should reset array items even with keepInput when lengths match', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+      const store = createTestStore({
         initialInput: { items: ['a', 'b'] },
       });
       const itemsStore = store.children.items;
@@ -432,7 +422,7 @@ describe('reset', () => {
     });
 
     test('should reset nested array field state', () => {
-      const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+      const store = createTestStore({
         initialInput: { items: ['a', 'b'] },
       });
       const itemsStore = store.children.items;

@@ -1,16 +1,12 @@
-import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { createTestStore } from '../vitest/index.ts';
 import { getInput } from './getInput.ts';
 
 describe('getInput', () => {
   test('should return full form input when no path provided', () => {
-    const store = createTestStore(
-      v.object({ name: v.string(), age: v.number() }),
-      {
-        initialInput: { name: 'John', age: 30 },
-      }
-    );
+    const store = createTestStore({
+      initialInput: { name: 'John', age: 30 },
+    });
 
     const result = getInput(store);
 
@@ -18,7 +14,7 @@ describe('getInput', () => {
   });
 
   test('should return field input value', () => {
-    const store = createTestStore(v.object({ name: v.string() }), {
+    const store = createTestStore({
       initialInput: { name: 'John' },
     });
 
@@ -28,10 +24,9 @@ describe('getInput', () => {
   });
 
   test('should return nested field input', () => {
-    const store = createTestStore(
-      v.object({ user: v.object({ email: v.string() }) }),
-      { initialInput: { user: { email: 'test@example.com' } } }
-    );
+    const store = createTestStore({
+      initialInput: { user: { email: 'test@example.com' } },
+    });
 
     const result = getInput(store, { path: ['user', 'email'] });
 
@@ -39,7 +34,7 @@ describe('getInput', () => {
   });
 
   test('should return array item input', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b', 'c'] },
     });
 
@@ -49,7 +44,7 @@ describe('getInput', () => {
   });
 
   test('should return full array input', () => {
-    const store = createTestStore(v.object({ items: v.array(v.string()) }), {
+    const store = createTestStore({
       initialInput: { items: ['a', 'b', 'c'] },
     });
 
@@ -59,10 +54,9 @@ describe('getInput', () => {
   });
 
   test('should return nested object within array', () => {
-    const store = createTestStore(
-      v.object({ users: v.array(v.object({ name: v.string() })) }),
-      { initialInput: { users: [{ name: 'John' }, { name: 'Jane' }] } }
-    );
+    const store = createTestStore({
+      initialInput: { users: [{ name: 'John' }, { name: 'Jane' }] },
+    });
 
     const result = getInput(store, { path: ['users', 0, 'name'] });
 
@@ -70,7 +64,7 @@ describe('getInput', () => {
   });
 
   test('should return undefined for uninitialized field', () => {
-    const store = createTestStore(v.object({ name: v.optional(v.string()) }));
+    const store = createTestStore({ initialInput: { name: undefined } });
 
     const result = getInput(store, { path: ['name'] });
 

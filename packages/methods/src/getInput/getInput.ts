@@ -7,9 +7,9 @@ import {
   type PartialValues,
   type PathValue,
   type RequiredPath,
+  type StandardSchemaV1,
   type ValidPath,
 } from '@formisch/core';
-import type * as v from 'valibot';
 
 /**
  * Get form input config interface.
@@ -31,7 +31,7 @@ export interface GetFieldInputConfig<
   /**
    * The path to the field to retrieve input from.
    */
-  readonly path: ValidPath<v.InferInput<TSchema>, TFieldPath>;
+  readonly path: ValidPath<StandardSchemaV1.InferInput<TSchema>, TFieldPath>;
 }
 
 /**
@@ -44,7 +44,7 @@ export interface GetFieldInputConfig<
  */
 export function getInput<TSchema extends FormSchema>(
   form: BaseFormStore<TSchema>
-): PartialValues<v.InferInput<TSchema>>;
+): PartialValues<StandardSchemaV1.InferInput<TSchema>>;
 
 /**
  * Retrieves the current input value of a specific field or the entire form.
@@ -65,8 +65,8 @@ export function getInput<
     : GetFormInputConfig
 ): PartialValues<
   TFieldPath extends RequiredPath
-    ? PathValue<v.InferInput<TSchema>, TFieldPath>
-    : v.InferInput<TSchema>
+    ? PathValue<StandardSchemaV1.InferInput<TSchema>, TFieldPath>
+    : StandardSchemaV1.InferInput<TSchema>
 >;
 
 // @__NO_SIDE_EFFECTS__
