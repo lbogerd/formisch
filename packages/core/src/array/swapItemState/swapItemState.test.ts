@@ -251,6 +251,29 @@ describe('swapItemState', () => {
     });
   });
 
+  describe('kind mismatches', () => {
+    test('should skip swap entirely when kinds cannot be reconciled', () => {
+      const store = createTestStore({
+        initialInput: { first: ['a'], second: 'foo' },
+      });
+
+      const firstStore = store.children.first;
+      const secondStore = store.children.second;
+
+      expect(firstStore.kind).toBe('array');
+      expect(secondStore.kind).toBe('value');
+
+      swapItemState(firstStore, secondStore);
+
+      // Both stores keep their state as a partial swap would corrupt the
+      // container's presence signal with a primitive value
+      expect(firstStore.kind).toBe('array');
+      expect(firstStore.input.value).toBe(true);
+      expect(secondStore.kind).toBe('value');
+      expect(secondStore.input.value).toBe('foo');
+    });
+  });
+
   describe('edge cases', () => {
     test('should handle swapping startInput values', () => {
       const store = createTestStore({

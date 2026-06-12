@@ -2,6 +2,7 @@ import { initializeFieldStore } from '../../field/initializeFieldStore/index.ts'
 import { reconcileFieldStore } from '../../field/reconcileFieldStore/index.ts';
 import { batch, untrack } from '../../framework/index.ts';
 import type { InternalFieldStore, PathKey } from '../../types/index.ts';
+import { resetItemState } from '../resetItemState/index.ts';
 
 /**
  * Copies the deeply nested state (signal values) from one field store to
@@ -27,6 +28,12 @@ export function copyItemState(
           fromInternalFieldStore.kind,
           false
         );
+      }
+
+      // Skip copy entirely if kinds still differ after reconciliation, as a
+      // partial copy between incompatible stores corrupts presence signals
+      if (fromInternalFieldStore.kind !== toInternalFieldStore.kind) {
+        return;
       }
 
       // Copy elements reference
@@ -67,8 +74,21 @@ export function copyItemState(
         // Initialize path variable for lazy parsing
         let path: PathKey[] | undefined;
 
+        // Calculate maximum length to ensure destination-only children are
+        // cleared and do not leak state from previous items
+        const maxLength = Math.max(
+          fromItems.length,
+          toInternalFieldStore.children.length
+        );
+
         // Copy state for each array item
-        for (let index = 0; index < fromItems.length; index++) {
+        for (let index = 0; index < maxLength; index++) {
+          // If index exceeds source items, clear destination child
+          if (index >= fromItems.length) {
+            resetItemState(toInternalFieldStore.children[index], undefined);
+            continue;
+          }
+
           // If destination child doesn't exist, initialize it
           if (!toInternalFieldStore.children[index]) {
             // Parse path only when needed
@@ -107,8 +127,20 @@ export function copyItemState(
         // Initialize path variable for lazy parsing
         let path: PathKey[] | undefined;
 
-        // Copy state for each object property
-        for (const key in fromInternalFieldStore.children) {
+        // Copy state for each object property of either store
+        // Hint: Children can diverge between the two stores because field
+        // stores are created lazily, so destination-only children must be
+        // cleared to not leak state from previous items.
+        for (const key of new Set([
+          ...Object.keys(fromInternalFieldStore.children),
+          ...Object.keys(toInternalFieldStore.children),
+        ])) {
+          // If key is missing in source children, clear destination child
+          if (!fromInternalFieldStore.children[key]) {
+            resetItemState(toInternalFieldStore.children[key], undefined);
+            continue;
+          }
+
           // If destination child doesn't exist, initialize it
           if (!toInternalFieldStore.children[key]) {
             // Parse path only when needed

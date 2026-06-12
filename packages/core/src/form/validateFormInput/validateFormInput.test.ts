@@ -189,6 +189,27 @@ describe('validateFormInput', () => {
       }
     });
 
+    test('should resolve numeric string keys to array items', async () => {
+      const store = createTestStore({
+        initialInput: { todos: [{ label: '' }] },
+        issues: [validationIssue('Label is required', ['todos', '0', 'label'])],
+      });
+
+      await validateFormInput(store);
+
+      const todosStore = store.children.todos;
+      expect(todosStore.kind).toBe('array');
+      if (todosStore.kind === 'array') {
+        const itemStore = todosStore.children[0];
+        expect(itemStore.kind).toBe('object');
+        if (itemStore.kind === 'object') {
+          expect(itemStore.children.label.errors.value).toStrictEqual([
+            'Label is required',
+          ]);
+        }
+      }
+    });
+
     test('should handle bare key path into array of objects', async () => {
       const store = createTestStore({
         initialInput: { todos: [{ label: '' }] },
@@ -303,7 +324,7 @@ describe('validateFormInput', () => {
     test('should attach error to array field for non-numeric index', async () => {
       const store = createTestStore({
         initialInput: { todos: ['a'] },
-        issues: [validationIssue('String index error', ['todos', '0'])],
+        issues: [validationIssue('String index error', ['todos', 'foo'])],
       });
 
       await validateFormInput(store);
@@ -479,6 +500,50 @@ describe('validateFormInput', () => {
       // Resolve second validation
       resolveSecond!({ value: { name: 'Jane' } });
       await validation2;
+
+      expect(store.validators).toBe(0);
+      expect(store.isValidating.value).toBe(false);
+    });
+
+    test('should restore validation state when schema throws synchronously', async () => {
+      const schema: FormSchema = {
+        '~standard': {
+          version: 1,
+          vendor: 'formisch-test',
+          validate: () => {
+            throw new Error('Validation crashed');
+          },
+        },
+      };
+      const store = createTestStore({
+        schema,
+        initialInput: { name: 'John' },
+      });
+
+      await expect(validateFormInput(store)).rejects.toThrow(
+        'Validation crashed'
+      );
+
+      expect(store.validators).toBe(0);
+      expect(store.isValidating.value).toBe(false);
+    });
+
+    test('should restore validation state when async schema rejects', async () => {
+      const schema: FormSchema = {
+        '~standard': {
+          version: 1,
+          vendor: 'formisch-test',
+          validate: () => Promise.reject(new Error('Validation crashed')),
+        },
+      };
+      const store = createTestStore({
+        schema,
+        initialInput: { name: 'John' },
+      });
+
+      await expect(validateFormInput(store)).rejects.toThrow(
+        'Validation crashed'
+      );
 
       expect(store.validators).toBe(0);
       expect(store.isValidating.value).toBe(false);

@@ -139,14 +139,48 @@ describe('reconcileFieldStore', () => {
         expect(field.children[0].name).toBe('["field",0]');
         expect(field.children[0].input.value).toBe('a');
         expect(field.children[1].input.value).toBe('b');
-        // Items are created with unique IDs for each child
+        // Items are created with unique IDs for each child while initial
+        // and start items reflect the nullish baseline
         expect(field.items.value).toStrictEqual(['id-0', 'id-1']);
-        expect(field.initialItems.value).toStrictEqual(['id-0', 'id-1']);
-        expect(field.startItems.value).toStrictEqual(['id-0', 'id-1']);
+        expect(field.initialItems.value).toStrictEqual([]);
+        expect(field.startItems.value).toStrictEqual([]);
         // Initial and start input stay undefined while input becomes present
         expect(field.initialInput.value).toBeUndefined();
         expect(field.startInput.value).toBeUndefined();
         expect(field.input.value).toBe(true);
+        // Field and children are dirty as the baseline was undefined
+        expect(field.isDirty.value).toBe(true);
+        expect(field.children[0].isDirty.value).toBe(true);
+        // Children baseline stays undefined instead of the current input
+        expect(field.children[0].initialInput.value).toBeUndefined();
+        expect(field.children[0].startInput.value).toBeUndefined();
+      }
+    });
+
+    test('should seed children baseline from raw initial and start input', () => {
+      const store = createTestStore({ initialInput: { field: undefined } });
+      const field = store.children.field;
+      expect(field.kind).toBe('value');
+      if (field.kind === 'value') {
+        // Simulate a value field whose baseline holds a composite value
+        field.initialInput.value = ['a'];
+        field.startInput.value = ['a'];
+        field.input.value = ['a', 'b'];
+      }
+      reconcileFieldStore(field, 'array');
+      expect(field.kind).toBe('array');
+      if (field.kind === 'array') {
+        expect(field.children[0].initialInput.value).toBe('a');
+        expect(field.children[0].startInput.value).toBe('a');
+        expect(field.children[0].isDirty.value).toBe(false);
+        expect(field.children[1].initialInput.value).toBeUndefined();
+        expect(field.children[1].startInput.value).toBeUndefined();
+        expect(field.children[1].isDirty.value).toBe(true);
+        expect(field.initialItems.value).toHaveLength(1);
+        expect(field.startItems.value).toHaveLength(1);
+        expect(field.items.value).toHaveLength(2);
+        // Field is dirty as items length differs from start items length
+        expect(field.isDirty.value).toBe(true);
       }
     });
 

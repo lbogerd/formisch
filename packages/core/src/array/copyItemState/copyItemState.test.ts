@@ -122,10 +122,47 @@ describe('copyItemState', () => {
         expect(targetStore.children.name.input.value).toBe('John');
         expect(targetStore.children.email.input.value).toBe('john@example.com');
 
-        // Target-only keys are left untouched
-        expect(targetStore.children.phone.input.value).toBe('123');
+        // Target-only keys are cleared to not leak previous item state
+        expect(targetStore.children.phone.input.value).toBeUndefined();
+        expect(targetStore.children.phone.startInput.value).toBeUndefined();
         expect(sourceStore.children.phone).toBeUndefined();
       }
+    });
+  });
+
+  describe('kind mismatches', () => {
+    test('should skip copy entirely when kinds cannot be reconciled', () => {
+      const store = createTestStore({
+        initialInput: { source: ['a'], target: 'foo' },
+      });
+
+      const sourceStore = store.children.source;
+      const targetStore = store.children.target;
+
+      expect(sourceStore.kind).toBe('array');
+      expect(targetStore.kind).toBe('value');
+
+      copyItemState(sourceStore, targetStore);
+
+      // Target keeps its primitive state and source presence flag intact
+      expect(targetStore.kind).toBe('value');
+      expect(targetStore.input.value).toBe('foo');
+      expect(sourceStore.input.value).toBe(true);
+    });
+
+    test('should skip copy from value field to container field', () => {
+      const store = createTestStore({
+        initialInput: { source: 'foo', target: ['a'] },
+      });
+
+      const sourceStore = store.children.source;
+      const targetStore = store.children.target;
+
+      copyItemState(sourceStore, targetStore);
+
+      // Container presence flag is not overwritten with a primitive
+      expect(targetStore.input.value).toBe(true);
+      expect(targetStore.kind).toBe('array');
     });
   });
 
@@ -181,6 +218,31 @@ describe('copyItemState', () => {
         expect(targetStore.children.length).toBe(3);
         expect(targetStore.children[1].input.value).toBe('b');
         expect(targetStore.children[2].input.value).toBe('c');
+      }
+    });
+
+    test('should clear surplus children when copying smaller array', () => {
+      const store = createTestStore({
+        initialInput: {
+          source: ['a'],
+          target: ['x', 'y', 'z'],
+        },
+      });
+
+      const sourceStore = store.children.source;
+      const targetStore = store.children.target;
+
+      expect(sourceStore.kind).toBe('array');
+      expect(targetStore.kind).toBe('array');
+
+      if (sourceStore.kind === 'array' && targetStore.kind === 'array') {
+        copyItemState(sourceStore, targetStore);
+
+        expect(targetStore.items.value).toEqual(sourceStore.items.value);
+        expect(targetStore.children[0].input.value).toBe('a');
+        // Surplus children are cleared to not leak previous item state
+        expect(targetStore.children[1].input.value).toBeUndefined();
+        expect(targetStore.children[2].input.value).toBeUndefined();
       }
     });
   });

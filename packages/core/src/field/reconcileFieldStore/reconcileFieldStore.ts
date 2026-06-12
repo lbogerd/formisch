@@ -5,12 +5,100 @@ import {
   untrack,
 } from '../../framework/index.ts';
 import type {
+  InternalArrayStore,
   InternalFieldStore,
   InternalValueStore,
   PathKey,
 } from '../../types/index.ts';
 import { isPlainObject } from '../../values.ts';
 import { initializeFieldStore } from '../initializeFieldStore/index.ts';
+
+/**
+ * Seeds the initial and start state of a field store recursively from the raw
+ * initial and start input of an upgraded ancestor. Children created during an
+ * upgrade are initialized from the current input, so their baseline must be
+ * corrected afterwards to keep reset and dirty comparisons accurate.
+ *
+ * @param internalFieldStore The field store to seed.
+ * @param initialInput The raw initial input for this field.
+ * @param startInput The raw start input for this field.
+ */
+function seedFieldBaseline(
+  internalFieldStore: InternalFieldStore,
+  initialInput: unknown,
+  startInput: unknown
+): void {
+  // If field store is a container, seed presence flags and recurse
+  if (
+    internalFieldStore.kind === 'array' ||
+    internalFieldStore.kind === 'object'
+  ) {
+    // Remap baseline input signals to presence flags
+    internalFieldStore.initialInput.value =
+      initialInput == null ? initialInput : true;
+    internalFieldStore.startInput.value =
+      startInput == null ? startInput : true;
+
+    // If field store is array, seed items and recurse into indices
+    if (internalFieldStore.kind === 'array') {
+      const initialArray = Array.isArray(initialInput)
+        ? initialInput
+        : undefined;
+      const startArray = Array.isArray(startInput) ? startInput : undefined;
+      internalFieldStore.initialItems.value = initialArray
+        ? initialArray.map(createId)
+        : [];
+      internalFieldStore.startItems.value = startArray
+        ? startArray.map(createId)
+        : [];
+      for (let index = 0; index < internalFieldStore.children.length; index++) {
+        seedFieldBaseline(
+          internalFieldStore.children[index],
+          initialArray?.[index],
+          startArray?.[index]
+        );
+      }
+
+      // Update dirty state based on input or items length change
+      internalFieldStore.isDirty.value = untrack(
+        () =>
+          internalFieldStore.startInput.value !==
+            internalFieldStore.input.value ||
+          internalFieldStore.startItems.value.length !==
+            internalFieldStore.items.value.length
+      );
+
+      // Otherwise, recurse into object keys
+    } else {
+      for (const key in internalFieldStore.children) {
+        seedFieldBaseline(
+          internalFieldStore.children[key],
+          // @ts-expect-error
+          initialInput?.[key],
+          // @ts-expect-error
+          startInput?.[key]
+        );
+      }
+
+      // Update dirty state based on input change
+      internalFieldStore.isDirty.value = untrack(
+        () =>
+          internalFieldStore.startInput.value !== internalFieldStore.input.value
+      );
+    }
+
+    // Otherwise, seed value field baseline directly
+  } else {
+    internalFieldStore.initialInput.value = initialInput;
+    internalFieldStore.startInput.value = startInput;
+
+    // Update dirty state with special handling for empty string and NaN
+    const input = untrack(() => internalFieldStore.input.value);
+    internalFieldStore.isDirty.value =
+      startInput !== input &&
+      (startInput != null || (input !== '' && !Number.isNaN(input)));
+  }
+}
 
 /**
  * Reconciles a field store with the specified kind. Value fields created from
@@ -112,11 +200,25 @@ export function reconcileFieldStore(
           path.pop();
         }
 
-        // Set items with unique IDs for each child
-        const initialItems = partialFieldStore.children.map(createId);
-        partialFieldStore.initialItems = createSignal(initialItems);
-        partialFieldStore.startItems = createSignal(initialItems);
-        partialFieldStore.items = createSignal(initialItems);
+        // Set items with unique IDs derived from the raw input values so
+        // that initial and start items reflect the original baseline
+        partialFieldStore.initialItems = createSignal(
+          ((initialInput ?? []) as unknown[]).map(createId)
+        );
+        partialFieldStore.startItems = createSignal(
+          ((startInput ?? []) as unknown[]).map(createId)
+        );
+        partialFieldStore.items = createSignal(arrayInput.map(createId));
+
+        // Seed children baseline from raw initial and start input as the
+        // children were initialized from the current input
+        for (let index = 0; index < partialFieldStore.children.length; index++) {
+          seedFieldBaseline(
+            partialFieldStore.children[index],
+            (initialInput as unknown[] | null | undefined)?.[index],
+            (startInput as unknown[] | null | undefined)?.[index]
+          );
+        }
       }
 
       // Otherwise, upgrade to object field
@@ -149,6 +251,18 @@ export function reconcileFieldStore(
           // Remove key from path for next iteration
           path.pop();
         }
+
+        // Seed children baseline from raw initial and start input as the
+        // children were initialized from the current input
+        for (const key in partialFieldStore.children) {
+          seedFieldBaseline(
+            partialFieldStore.children[key],
+            // @ts-expect-error
+            initialInput?.[key],
+            // @ts-expect-error
+            startInput?.[key]
+          );
+        }
       }
     }
 
@@ -156,5 +270,19 @@ export function reconcileFieldStore(
     initialInputSignal.value = initialInput == null ? initialInput : true;
     startInputSignal.value = startInput == null ? startInput : true;
     inputSignal.value = input == null ? input : true;
+
+    // Update dirty state based on remapped presence flags
+    // Hint: A cast is required because TypeScript still narrows the store to
+    // a value field even though the kind was upgraded above.
+    if (kind === 'array') {
+      const arrayFieldStore = internalFieldStore as unknown as InternalArrayStore;
+      arrayFieldStore.isDirty.value =
+        startInputSignal.value !== inputSignal.value ||
+        untrack(() => arrayFieldStore.startItems.value).length !==
+          untrack(() => arrayFieldStore.items.value).length;
+    } else {
+      internalFieldStore.isDirty.value =
+        startInputSignal.value !== inputSignal.value;
+    }
   });
 }

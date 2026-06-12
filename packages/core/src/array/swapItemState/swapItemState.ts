@@ -62,6 +62,12 @@ export function swapItemState(
         );
       }
 
+      // Skip swap entirely if kinds still differ after reconciliation, as a
+      // partial swap between incompatible stores corrupts presence signals
+      if (firstInternalFieldStore.kind !== secondInternalFieldStore.kind) {
+        return;
+      }
+
       // Swap elements references
       const tempElements = firstInternalFieldStore.elements;
       firstInternalFieldStore.elements = secondInternalFieldStore.elements;

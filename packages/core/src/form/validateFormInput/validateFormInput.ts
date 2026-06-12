@@ -40,133 +40,154 @@ export async function validateFormInput(
   internalFormStore.validators++;
   internalFormStore.isValidating.value = true;
 
-  // Validate form input with Standard Schema
-  let result = internalFormStore.schema['~standard'].validate(
-    untrack(() => getFieldInput(internalFormStore))
-  );
+  // Ensure validation state is restored even if schema validation throws
+  try {
+    // Validate form input with Standard Schema
+    let result = internalFormStore.schema['~standard'].validate(
+      untrack(() => getFieldInput(internalFormStore))
+    );
 
-  // Await result if schema validates asynchronously
-  if (result instanceof Promise) {
-    result = await result;
-  }
+    // Await result if schema validates asynchronously
+    if (result instanceof Promise) {
+      result = await result;
+    }
 
-  // Create variables for root and nested errors
-  let rootErrors: [string, ...string[]] | undefined;
-  let nestedErrors:
-    | Record<string, [string, ...string[]] | undefined>
-    | undefined;
+    // Create variables for root and nested errors
+    let rootErrors: [string, ...string[]] | undefined;
+    let nestedErrors:
+      | Record<string, [string, ...string[]] | undefined>
+      | undefined;
 
-  // Process validation issues into error variables
-  if (result.issues) {
-    // Initialize nested errors object
-    nestedErrors = {};
+    // Process validation issues into error variables
+    if (result.issues) {
+      // Initialize nested errors object
+      nestedErrors = {};
 
-    // Process each validation issue
-    for (const issue of result.issues) {
-      // Create variable for name of deepest reachable field
-      let name: string | undefined;
+      // Process each validation issue
+      for (const issue of result.issues) {
+        // Create variable for name of deepest reachable field
+        let name: string | undefined;
 
-      // If issue has path, resolve it against the field store tree
-      if (issue.path?.length) {
-        // Initialize path array
-        const path: PathKey[] = [];
+        // If issue has path, resolve it against the field store tree
+        if (issue.path?.length) {
+          // Initialize path array
+          const path: PathKey[] = [];
 
-        // Start resolution at form store root
-        let internalFieldStore: InternalFieldStore = internalFormStore;
+          // Start resolution at form store root
+          let internalFieldStore: InternalFieldStore = internalFormStore;
 
-        // Resolve each path segment to its field store
-        for (const pathSegment of issue.path) {
-          // Extract key from path segment
-          const key =
-            typeof pathSegment === 'object' && pathSegment !== null
-              ? pathSegment.key
-              : pathSegment;
+          // Resolve each path segment to its field store
+          for (const pathSegment of issue.path) {
+            // Extract key from path segment
+            const key =
+              typeof pathSegment === 'object' && pathSegment !== null
+                ? pathSegment.key
+                : pathSegment;
 
-          // Stop at unsupported keys (e.g. symbols)
-          if (typeof key !== 'string' && typeof key !== 'number') {
-            break;
+            // Stop at unsupported keys (e.g. symbols)
+            if (typeof key !== 'string' && typeof key !== 'number') {
+              break;
+            }
+
+            // Stop at array fields if key is not a visible index
+            if (internalFieldStore.kind === 'array') {
+              const arrayFieldStore: InternalArrayStore = internalFieldStore;
+
+              // Coerce numeric string keys as the spec allows any property
+              // key and some schema libraries emit indices as strings
+              const index =
+                typeof key === 'number'
+                  ? key
+                  : /^\d+$/.test(key)
+                    ? +key
+                    : -1;
+              if (
+                index < 0 ||
+                index >= untrack(() => arrayFieldStore.items.value).length ||
+                !arrayFieldStore.children[index]
+              ) {
+                break;
+              }
+              internalFieldStore = arrayFieldStore.children[index];
+
+              // Add numeric index to path to match field store names
+              path.push(index);
+              continue;
+
+              // Stop at object fields if child does not exist
+            } else if (internalFieldStore.kind === 'object') {
+              if (!internalFieldStore.children[key]) {
+                break;
+              }
+              internalFieldStore = internalFieldStore.children[key];
+
+              // Stop at value fields as they have no children
+            } else {
+              break;
+            }
+
+            // Add key to path
+            path.push(key);
           }
 
-          // Stop at array fields if key is not a visible index
-          if (internalFieldStore.kind === 'array') {
-            const arrayFieldStore: InternalArrayStore = internalFieldStore;
-            if (
-              typeof key !== 'number' ||
-              key >= untrack(() => arrayFieldStore.items.value).length ||
-              !arrayFieldStore.children[key]
-            ) {
-              break;
-            }
-            internalFieldStore = arrayFieldStore.children[key];
+          // Set name if any path segment could be resolved
+          if (path.length) {
+            name = JSON.stringify(path);
+          }
+        }
 
-            // Stop at object fields if child does not exist
-          } else if (internalFieldStore.kind === 'object') {
-            if (!internalFieldStore.children[key]) {
-              break;
-            }
-            internalFieldStore = internalFieldStore.children[key];
-
-            // Stop at value fields as they have no children
+        // If issue maps to a nested field, append or initialize nested errors
+        if (name) {
+          const fieldErrors = nestedErrors[name];
+          if (fieldErrors) {
+            fieldErrors.push(issue.message);
           } else {
-            break;
+            nestedErrors[name] = [issue.message];
           }
 
-          // Add key to path
-          path.push(key);
-        }
-
-        // Set name if any path segment could be resolved
-        if (path.length) {
-          name = JSON.stringify(path);
-        }
-      }
-
-      // If issue maps to a nested field, append or initialize nested errors
-      if (name) {
-        const fieldErrors = nestedErrors[name];
-        if (fieldErrors) {
-          fieldErrors.push(issue.message);
+          // Otherwise, assign to root errors
         } else {
-          nestedErrors[name] = [issue.message];
-        }
-
-        // Otherwise, assign to root errors
-      } else {
-        if (rootErrors) {
-          rootErrors.push(issue.message);
-        } else {
-          rootErrors = [issue.message];
+          if (rootErrors) {
+            rootErrors.push(issue.message);
+          } else {
+            rootErrors = [issue.message];
+          }
         }
       }
     }
-  }
 
-  // Create variable to decide if first error field should be focused
-  let shouldFocus = config?.shouldFocus ?? false;
+    // Create variable to decide if first error field should be focused
+    let shouldFocus = config?.shouldFocus ?? false;
 
-  // Batch all state updates for optimal reactivity performance
-  batch(() => {
-    // Set or reset errors on each field store
-    walkFieldStore(internalFormStore, (internalFieldStore) => {
-      if (internalFieldStore.name === '[]') {
-        internalFieldStore.errors.value = rootErrors ?? null;
-      } else {
-        const fieldErrors = nestedErrors?.[internalFieldStore.name] ?? null;
-        internalFieldStore.errors.value = fieldErrors;
+    // Batch all state updates for optimal reactivity performance
+    batch(() => {
+      // Set or reset errors on each field store
+      walkFieldStore(internalFormStore, (internalFieldStore) => {
+        if (internalFieldStore.name === '[]') {
+          internalFieldStore.errors.value = rootErrors ?? null;
+        } else {
+          const fieldErrors = nestedErrors?.[internalFieldStore.name] ?? null;
+          internalFieldStore.errors.value = fieldErrors;
 
-        // Focus first field with error if configured
-        if (shouldFocus && fieldErrors) {
-          internalFieldStore.elements[0]?.focus();
-          shouldFocus = false;
+          // Focus first field with error if configured
+          if (shouldFocus && fieldErrors) {
+            internalFieldStore.elements[0]?.focus();
+            shouldFocus = false;
+          }
         }
-      }
+      });
     });
 
-    // Update validation state of form
-    internalFormStore.validators--;
-    internalFormStore.isValidating.value = internalFormStore.validators > 0;
-  });
+    // Return validation result
+    return result;
 
-  // Return validation result
-  return result;
+    // Update validation state of form even if schema validation throws to
+    // prevent the validator counter from leaking and "isValidating" from
+    // being stuck at "true"
+  } finally {
+    batch(() => {
+      internalFormStore.validators--;
+      internalFormStore.isValidating.value = internalFormStore.validators > 0;
+    });
+  }
 }
